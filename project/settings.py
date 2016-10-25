@@ -121,7 +121,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-TELEGRAM_TOKEN = 'NEED ME'
+TELEGRAM_TOKEN = None # need set in local_settings
 
 try:
     from project.local_settings import TELEGRAM_TOKEN
