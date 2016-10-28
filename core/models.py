@@ -7,6 +7,11 @@ class Site(models.Model):
     url = models.URLField(verbose_name='Site address')
     name = models.CharField(max_length=255, unique=True)
 
+    @classmethod
+    def get_all_sites(cls, command):
+        sites = [command+site.name for site in cls.objects.all()]
+        return '\n'.join(sites)
+
     def save(self, **kwargs):
         if hasattr(AllSites, self.name):
             return super().save()
@@ -79,7 +84,11 @@ class TelegramBot(models.Model):
         return Bot(self.token)
 
     def get_last_messages(self):
-        return self.get_bot().get_new_messages(self.last_message_id)
+        messages = self.get_bot().get_new_messages(self.last_message_id)
+        if messages:
+            self.last_message_id = messages[-1]['message_id']
+            self.save()
+        return messages
 
     def save(self, **kwargs):
         about_bot = self.get_bot().get_me()
@@ -107,6 +116,9 @@ class TelegramUser(models.Model):
     last_name = models.CharField(max_length=255, blank=True)
     bot = models.ForeignKey(TelegramBot, related_name='users')
 
+    class Meta:
+        unique_together = 'user_id', 'bot'
+
     def send_message(self, message):
         bot = self.bot.get_bot()
         bot.send_message(self.user_id, message)
@@ -116,8 +128,8 @@ class TelegramUser(models.Model):
 
 
 class UserSeries(models.Model):
-    user = models.ForeignKey(TelegramUser, related_name='users')
-    serial = models.ForeignKey(SiteTVSeries, related_name='users')
+    user = models.ForeignKey(TelegramUser, related_name='tv_series')
+    tv_series = models.ForeignKey(SiteTVSeries, related_name='users')
     dc = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
