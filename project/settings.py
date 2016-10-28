@@ -121,9 +121,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-TELEGRAM_TOKEN = None # need set in local_settings
+# TELEGRAM_TOKEN = None # need set in local_settings
 
-try:
-    from project.local_settings import TELEGRAM_TOKEN
-except ImportError:
-    raise Exception('You must set token in local_settings')
+# try:
+#     from project.local_settings import TELEGRAM_TOKEN
+# except ImportError:
+#     raise Exception('You must set token in local_settings')
