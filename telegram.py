@@ -4,10 +4,9 @@ import json
 
 class Bot(object):
 
-    def __init__(self, token, last_message_id=None):
+    def __init__(self, token):
         self.token = token
         self.url = 'https://api.telegram.org/bot' + token
-        self.last_message_id = last_message_id if last_message_id else 0
 
     def get_me(self):
         url_get_me = self.url + '/getMe'
@@ -19,7 +18,12 @@ class Bot(object):
         response = requests.get(url_updates)
         return response.json()
 
-    def get_new_messages(self):
+    def get_new_messages(self, last_message_id=None):
+        if last_message_id:
+            self.last_message_id = last_message_id
+        elif not hasattr(self, 'last_message_id'):
+            self.last_message_id = 0
+
         updates = self.get_updates()
         messages = updates['result']
         new_messages = [message['message'] for message in messages

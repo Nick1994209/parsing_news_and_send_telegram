@@ -8,5 +8,5 @@ class Command(BaseCommand):
         print('Telegram bot run')
 
         for bot in models.TelegramBot.objects.all():
-            bot = bot.get_bot()
+            print(bot.get_last_messages())
             # telegram_

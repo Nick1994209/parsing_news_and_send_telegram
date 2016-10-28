@@ -79,7 +79,7 @@ class TelegramBot(models.Model):
         return Bot(self.token)
 
     def get_last_messages(self):
-        bot = self.get_bot().get_new_messages()
+        return self.get_bot().get_new_messages(self.last_message_id)
 
     def save(self, **kwargs):
         about_bot = self.get_bot().get_me()
