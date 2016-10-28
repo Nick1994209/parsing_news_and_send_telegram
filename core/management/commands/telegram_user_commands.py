@@ -22,8 +22,6 @@ class Command(BaseCommand):
                             user_id=message['from']['id'], username=message['from'].get('username', ''),
                             first_name=message['from']['first_name'], last_name=message['from'].get('last_name', ''),
                         )
-                        bot_user.send_message(models.Site.get_all_sites())
-
                     self.get_command(bot_user, message)
 
             sleep(10)
