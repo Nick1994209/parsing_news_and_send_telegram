@@ -21,24 +21,58 @@ class Site(models.Model):
     def update_series(self):
         series = AllSites.get_all_series(self.name)
 
-    def get_all_series(self):
+    def get_new_episodes(self):
+        page = 1
+
+        while True:
+            episodes = AllSites.get_all_series(self.name, page)
+            if not episodes: break
+
+            next_page = True
+
+            for episode in episodes:
+                tv_series = self.tv_series.filter(name_rus=episode['name_rus'])
+                if tv_series:
+                    tv_series = tv_series.get()
+                else:
+                    tv_series = self.tv_series.create(
+                        name_rus=episode.get('name_rus', ''),
+                        name_eng=episode.get('name_eng', ''))
+
+                number = number=episode.get('number', '1')
+                series = tv_series.series.filter(number__gte=number)
+                if series:
+                    next_page = False
+                else:
+                    series = tv_series.series.create(
+                        number=number,
+                        url=episode.get('url', ''))
+
+                    message1 = 'Для {} вышла новая серия \n'.format(tv_series.__str__())
+                    message2 = '{}\n'.format(series.__str__())
+                    tv_series.users_send_message(message1 + message2)
+
+            if next_page:
+                page += 1
+            else:
+                break
+
+    def get_new_tv_series_with_episodes(self):
         page = 1
         while True:
             episodes = AllSites.get_all_series(self.name, page)
+            if not episodes: break
 
-            if not episodes:
-                break
-
+            existed_serieses = []
             for episode in episodes:
                 if self.tv_series.filter(name_rus=episode['name_rus']).exists():
                     continue
 
-                episode_obj = self.tv_series.create(
+                tv_series = self.tv_series.create(
                     name_rus=episode.get('name_rus', ''), name_eng=episode.get('name_eng', ''))
 
-                episode_obj.series.create(
+                tv_series.series.create(
                     number=episode.get('number', '1'), url=episode.get('url', ''))
-
             page += 1
 
     def __str__(self):
@@ -49,6 +83,10 @@ class SiteTVSeries(models.Model):
     site = models.ForeignKey(Site, related_name='tv_series')
     name_rus = models.CharField(max_length=255, blank=True)
     name_eng = models.CharField(max_length=255, blank=True)
+
+    def users_send_message(self, message):
+        for user in self.users.all():
+            user.user.send_message(message)
 
     def __str__(self):
         return '%s %s site=%s' % (self.name_rus, self.name_eng, self.site)
@@ -62,16 +100,19 @@ class Series(models.Model):
     class Meta:
         unique_together = 'tv_series', 'number'
 
-    def save(self, **kwargs):
-        object = super().save(**kwargs)
-        self.users_alert()
-        return object
+    def __str__(self):
+        return '{} {}'.format(self.number, self.tv_series)
 
-    def users_alert(self):
-        message = 'Серия={} Урл={} Название={}'.format(self.number, self.url, self.tv_series.name_rus)
-        if self.tv_series.users.all().exists():
-            for user in self.tv_series.users.all():
-                user.user.send_message(message)
+    # def save(self, **kwargs):
+    #     object = super().save(**kwargs)
+    #     self.users_alert()
+    #     return object
+    #
+    # def users_alert(self):
+    #     message = 'Серия={} Урл={} Название={}'.format(self.number, self.url, self.tv_series.name_rus)
+    #     if self.tv_series.users.all().exists():
+    #         for user in self.tv_series.users.all():
+    #             user.user.send_message(message)
 
 
 class TelegramBot(models.Model):

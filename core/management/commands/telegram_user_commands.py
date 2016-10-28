@@ -2,7 +2,6 @@ from time import sleep
 
 from django.core.management.base import BaseCommand
 from core import models
-from sites import AllSites
 
 
 class Command(BaseCommand):
@@ -47,7 +46,6 @@ class Command(BaseCommand):
 
         if command.startswith('/tv_series__'):
             tv_series_name = command.split('/tv_series__').pop()
-            print(tv_series_name)
             tv_series = models.SiteTVSeries.objects.filter(name_rus__startswith=tv_series_name)
 
             if tv_series:
