@@ -16,13 +16,13 @@ def get_all_episodes(page=1):
     anime_values = []
     for anime_div_bs in anime_divs_bs:
         episod = {}
-        episod['label_rus'] = anime_div_bs.find('span', {"class": "label_rus"}).decode_contents()
-        episod['label_eng'] = anime_div_bs.find('span', {"class": "label_eng"}).decode_contents()
+        episod['name_rus'] = anime_div_bs.find('span', {"class": "label_rus"}).decode_contents()
+        episod['name_eng'] = anime_div_bs.find('span', {"class": "label_eng"}).decode_contents()
 
         for href_bs in anime_div_bs.find_all('a'):
             if '!/episode/' in href_bs['href']:
                 episod_href = href_bs['href']
-                episod['href'] = episod_href
+                episod['url'] = episod_href
 
             href_html = href_bs.decode_contents()
             if 'эпизод' in href_html:
