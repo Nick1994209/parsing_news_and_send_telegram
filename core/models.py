@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from sites import AllSitesCinema, AllSitesNews
 from telegram import Bot
@@ -55,7 +56,7 @@ class News(models.Model):
     name_rus = models.CharField(max_length=255, blank=True)
     name_eng = models.CharField(max_length=255, blank=True)
     number = models.FloatField(blank=True, null=True)
-    dc = models.DateTimeField(auto_now_add=True)
+    dc = models.DateTimeField(default=datetime.datetime.now)
 
 
 class SiteCinema(Site):
@@ -69,9 +70,6 @@ class SiteCinema(Site):
             return super().save()
         else:
             raise Exception('Site not in [{}]'.format(AllSitesCinema.all_sites()))
-
-    def update_series(self):
-        series = AllSitesCinema.get_all_series(self.name)
 
     def get_new_episodes(self):
         page = 1
@@ -128,7 +126,7 @@ class Series(models.Model):
     tv_series = models.ForeignKey(SiteTVSeries, related_name='series')
     number = models.FloatField(models.Model, default=1)
     url = models.URLField(blank=True)
-    dc = models.DateTimeField(auto_now_add=True)
+    dc = models.DateTimeField(default=datetime.datetime.now)
 
     class Meta:
         unique_together = 'tv_series', 'number'
