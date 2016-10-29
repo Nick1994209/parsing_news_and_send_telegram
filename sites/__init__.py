@@ -14,7 +14,7 @@ class General(object):
         return ', '.join(sites)
 
 
-class AllCinemaSites(General):
+class AllSitesCinema(General):
     # anime
     animeonline = anime.animeonline
 

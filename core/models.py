@@ -1,5 +1,5 @@
 from django.db import models
-from sites import AllCinemaSites
+from sites import AllSitesCinema, AllSitesNews
 from telegram import Bot
 
 
@@ -15,7 +15,35 @@ class Site(models.Model):
         
         
 class SiteNews(Site):
-    pass
+
+    def save(self, **kwargs):
+        if hasattr(AllSitesNews, self.name):
+            return super().save()
+        else:
+            raise Exception('Site not in news [{}]'.format(AllSitesNews.all_sites()))
+
+    def users_send_message(self, message):
+        for user in self.users.all():
+            user.user.send_message(message)
+
+    def get_news(self):
+        page = 1
+
+        all_page_news = AllSitesNews.get_all_news(self.name, page)
+
+        for news_data in all_page_news:
+            news_obj = self.news.filter(**news_data)
+            if news_obj:
+                continue
+            else:
+                news_obj = self.news.create(**news_data)
+
+                message1 = 'На сайте "{}" \n'.format(self.name)
+                message2 = ' "{}  {}" \n'.format(news_obj.name_rus, news_obj.name_eng)
+                message3 = '{}\n'.format(news_obj.description)
+                message4 = '{}\n'.format(news_obj.url if news_obj.url else '')
+
+                self.users_send_message(message1 + message2 + message3 + message4)
 
 
 class News(models.Model):
@@ -37,19 +65,19 @@ class SiteCinema(Site):
         return '\n'.join(sites)
 
     def save(self, **kwargs):
-        if hasattr(AllCinemaSites, self.name):
+        if hasattr(AllSitesCinema, self.name):
             return super().save()
         else:
-            raise Exception('Site not in [{}]'.format(AllCinemaSites.all_sites()))
+            raise Exception('Site not in [{}]'.format(AllSitesCinema.all_sites()))
 
     def update_series(self):
-        series = AllCinemaSites.get_all_series(self.name)
+        series = AllSitesCinema.get_all_series(self.name)
 
     def get_new_episodes(self):
         page = 1
 
         while True:
-            episodes = AllCinemaSites.get_all_series(self.name, page)
+            episodes = AllSitesCinema.get_all_series(self.name, page)
             if not episodes: break
 
             next_page = True
@@ -81,24 +109,6 @@ class SiteCinema(Site):
                 page += 1
             else:
                 break
-
-    def get_new_tv_series_with_episodes(self):
-        page = 1
-        while True:
-            episodes = AllCinemaSites.get_all_series(self.name, page)
-            if not episodes: break
-
-            existed_serieses = []
-            for episode in episodes:
-                if self.tv_series.filter(name_rus=episode['name_rus']).exists():
-                    continue
-
-                tv_series = self.tv_series.create(
-                    name_rus=episode.get('name_rus', ''), name_eng=episode.get('name_eng', ''))
-
-                tv_series.series.create(
-                    number=episode.get('number', '1'), url=episode.get('url', ''))
-            page += 1
 
 
 class SiteTVSeries(models.Model):
