@@ -1,0 +1,10 @@
+[
+{
+  "model": "core.sitenews",
+  "pk": 1,
+  "fields": {
+    "url": "https://pythondigest.ru/",
+    "name": "pythondigest"
+  }
+}
+]
