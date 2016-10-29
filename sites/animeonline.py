@@ -2,11 +2,12 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
-
-URL = 'http://animeonline.su/ongoing/'
+SITE_URL = 'http://animeonline.su'
 
 
 def get_all_episodes(page=1):
+    URL = SITE_URL + '/ongoing/'
+
     response = requests.get(URL + 'page/{}'.format(page))
 
     content_bs = BeautifulSoup(response.content, 'html.parser') # response.content - находится весь html код страницы
@@ -22,7 +23,7 @@ def get_all_episodes(page=1):
         for href_bs in anime_div_bs.find_all('a'):
             if '!/episode/' in href_bs['href']:
                 episod_href = href_bs['href']
-                episod['url'] = episod_href
+                episod['url'] = SITE_URL + episod_href
 
             href_html = href_bs.decode_contents()
             if 'эпизод' in href_html:
