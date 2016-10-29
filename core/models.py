@@ -1,31 +1,55 @@
 from django.db import models
-from sites import AllSites
+from sites import AllCinemaSites
 from telegram import Bot
 
 
 class Site(models.Model):
     url = models.URLField(verbose_name='Site address')
     name = models.CharField(max_length=255, unique=True)
+    
+    class Meta:
+        abstract = True
 
+    def __str__(self):
+        return self.name
+        
+        
+class SiteNews(Site):
+    pass
+
+
+class News(models.Model):
+    site = models.ForeignKey(SiteNews, related_name='news')
+
+    url = models.URLField(blank=True)
+    tags = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    name_rus = models.CharField(max_length=255, blank=True)
+    name_eng = models.CharField(max_length=255, blank=True)
+    number = models.FloatField(blank=True, null=True)
+    dc = models.DateTimeField(auto_now_add=True)
+
+
+class SiteCinema(Site):
     @classmethod
     def get_all_sites(cls, command):
         sites = [command+site.name for site in cls.objects.all()]
         return '\n'.join(sites)
 
     def save(self, **kwargs):
-        if hasattr(AllSites, self.name):
+        if hasattr(AllCinemaSites, self.name):
             return super().save()
         else:
-            raise Exception('Site not in [{}]'.format(AllSites.all_sites()))
+            raise Exception('Site not in [{}]'.format(AllCinemaSites.all_sites()))
 
     def update_series(self):
-        series = AllSites.get_all_series(self.name)
+        series = AllCinemaSites.get_all_series(self.name)
 
     def get_new_episodes(self):
         page = 1
 
         while True:
-            episodes = AllSites.get_all_series(self.name, page)
+            episodes = AllCinemaSites.get_all_series(self.name, page)
             if not episodes: break
 
             next_page = True
@@ -48,9 +72,10 @@ class Site(models.Model):
                         number=number,
                         url=episode.get('url', ''))
 
-                    message1 = 'Для {} вышла новая серия \n'.format(tv_series.__str__())
-                    message2 = '{}\n'.format(series.__str__())
-                    tv_series.users_send_message(message1 + message2)
+                    message1 = 'На сайте "{}" \n'.format(tv_series.site.name)
+                    message2 = ' "{}" ({})\n'.format(tv_series.name_rus, tv_series.name_eng)
+                    message3 = 'Вышла новая серия {} {}'.format(series.number, series.url)
+                    tv_series.users_send_message(message1 + message2 + message3)
 
             if next_page:
                 page += 1
@@ -60,7 +85,7 @@ class Site(models.Model):
     def get_new_tv_series_with_episodes(self):
         page = 1
         while True:
-            episodes = AllSites.get_all_series(self.name, page)
+            episodes = AllCinemaSites.get_all_series(self.name, page)
             if not episodes: break
 
             existed_serieses = []
@@ -75,12 +100,9 @@ class Site(models.Model):
                     number=episode.get('number', '1'), url=episode.get('url', ''))
             page += 1
 
-    def __str__(self):
-        return self.name
-
 
 class SiteTVSeries(models.Model):
-    site = models.ForeignKey(Site, related_name='tv_series')
+    site = models.ForeignKey(SiteCinema, related_name='tv_series')
     name_rus = models.CharField(max_length=255, blank=True)
     name_eng = models.CharField(max_length=255, blank=True)
 
@@ -96,23 +118,13 @@ class Series(models.Model):
     tv_series = models.ForeignKey(SiteTVSeries, related_name='series')
     number = models.FloatField(models.Model, default=1)
     url = models.URLField(blank=True)
+    dc = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = 'tv_series', 'number'
 
     def __str__(self):
         return '{} {}'.format(self.number, self.tv_series)
-
-    # def save(self, **kwargs):
-    #     object = super().save(**kwargs)
-    #     self.users_alert()
-    #     return object
-    #
-    # def users_alert(self):
-    #     message = 'Серия={} Урл={} Название={}'.format(self.number, self.url, self.tv_series.name_rus)
-    #     if self.tv_series.users.all().exists():
-    #         for user in self.tv_series.users.all():
-    #             user.user.send_message(message)
 
 
 class TelegramBot(models.Model):
@@ -174,4 +186,13 @@ class UserSeries(models.Model):
     dc = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return '{user} {serial}'.format(user=self.user, serial=self.serial)
+        return '{user} {tv_series}'.format(user=self.user, tv_series=self.tv_series)
+
+
+class UserNews(models.Model):
+    user = models.ForeignKey(TelegramUser, related_name='sites_news')
+    site_news = models.ForeignKey(SiteNews, related_name='users')
+    dc = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '{user} {news}'.format(user=self.user, news=self.site_news)

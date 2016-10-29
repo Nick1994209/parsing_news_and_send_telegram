@@ -10,12 +10,12 @@ def get_all_episodes(page=1):
 
     response = requests.get(URL + 'page/{}'.format(page))
 
-    content_bs = BeautifulSoup(response.content, 'html.parser') # response.content - находится весь html код страницы
+    content_bs = BeautifulSoup(response.content, 'html.parser')
     block_anime_bs = content_bs.find(id='content').find(id='dle-content')
-    anime_divs_bs = block_anime_bs.find_all('div', {"class": "new_"})
+    anime_divs = block_anime_bs.find_all('div', {"class": "new_"})
 
     anime_values = []
-    for anime_div_bs in anime_divs_bs:
+    for anime_div_bs in anime_divs:
         episod = {}
         episod['name_rus'] = anime_div_bs.find('span', {"class": "label_rus"}).decode_contents()
         episod['name_eng'] = anime_div_bs.find('span', {"class": "label_eng"}).decode_contents()

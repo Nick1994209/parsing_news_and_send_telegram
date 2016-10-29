@@ -7,11 +7,11 @@ from core import models
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        print('Parsing sites run')
+        print('Parsing cinema sites run')
 
         while True:
 
-            for site in models.Site.objects.all():
+            for site in models.SiteCinema.objects.all():
                 site.get_new_episodes()
 
             hour = 60 * 60

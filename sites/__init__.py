@@ -1,18 +1,8 @@
-from sites import animeonline
+from sites.anime import animeonline
+from sites.news import pythondigest
 
 
-class AllSites(object):
-    animeonline = animeonline
-
-    @classmethod
-    def get_all_series(cls, site_name, page=1):
-
-        site = getattr(cls, site_name, None)
-        if site:
-            return site.get_all_episodes(page)
-        else:
-            raise Exception('Site dont parsing')
-
+class General(object):
     @classmethod
     def all_sites(cls):
         sites = []
@@ -22,3 +12,31 @@ class AllSites(object):
             if not callable(getattr(cls, attr)):
                 sites.append(attr)
         return ', '.join(sites)
+
+
+class AllCinemaSites(General):
+    # anime
+    animeonline = anime.animeonline
+
+    @classmethod
+    def get_all_series(cls, site_name, page=1):
+
+        site = getattr(cls, site_name, None)
+        if site:
+            return site.get_all_episodes(page)
+        else:
+            raise Exception("Site don't parsing")
+
+
+class AllSitesNews(General):
+    # python
+    pythondigest = pythondigest
+
+    @classmethod
+    def get_all_news(cls, site_name, page=1):
+
+        site = getattr(cls, site_name, None)
+        if site:
+            return site.get_all_news(page)
+        else:
+            raise Exception("Site don't parsing")
