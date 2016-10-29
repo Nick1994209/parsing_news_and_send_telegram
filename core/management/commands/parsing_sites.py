@@ -7,7 +7,7 @@ from core import models
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        print('Telegram bot run')
+        print('Parsing sites run')
 
         while True:
 
