@@ -27,11 +27,6 @@ class SiteNews(Site):
         for user in self.users.all():
             user.user.send_message(message)
 
-    @classmethod
-    def get_all_sites(cls, command):
-        sites = [command + site.name for site in cls.objects.all()]
-        return '\n'.join(sites)
-
     def get_news(self):
         page = 1
 
@@ -68,10 +63,6 @@ class News(models.Model):
 
 
 class SiteCinema(Site):
-    @classmethod
-    def get_all_sites(cls, command):
-        sites = [command+site.name for site in cls.objects.all()]
-        return '\n'.join(sites)
 
     def save(self, **kwargs):
         if hasattr(AllSitesCinema, self.name):
@@ -81,8 +72,10 @@ class SiteCinema(Site):
 
     def get_new_episodes(self):
         page = 1
+        max_count_page = 3
 
         while True:
+            if page > max_count_page: break
             episodes = AllSitesCinema.get_all_series(self.name, page)
             if not episodes: break
 
@@ -149,6 +142,9 @@ class TelegramBot(models.Model):
     username = models.CharField(max_length=255, blank=True) # set in save
     last_message_id = models.IntegerField(default=0)
 
+    sites_cinema = models.ManyToManyField(SiteCinema, related_name='bots', blank=True, null=True)
+    sites_news = models.ManyToManyField(SiteNews, related_name='bots', blank=True, null=True)
+
     def get_bot(self):
         return Bot(self.token)
 
@@ -201,8 +197,15 @@ class UserSeries(models.Model):
     tv_series = models.ForeignKey(SiteTVSeries, related_name='users')
     dc = models.DateTimeField(auto_now_add=True)
 
+    def save(self, **kwargs):
+        if self.tv_series.bots.filter(bots=self.user.bot):
+            return super().save(**kwargs)
+
     def __str__(self):
         return '{user} {tv_series}'.format(user=self.user, tv_series=self.tv_series)
+
+    class Meta:
+        unique_together = ('user', 'tv_series')
 
 
 class UserNews(models.Model):
@@ -210,5 +213,12 @@ class UserNews(models.Model):
     site_news = models.ForeignKey(SiteNews, related_name='users')
     dc = models.DateTimeField(auto_now_add=True)
 
+    def save(self, **kwargs):
+        if self.site_news.bots.filter(bots__id=[self.user.bot.id]):
+            return super().save(**kwargs)
+
     def __str__(self):
         return '{user} {news}'.format(user=self.user, news=self.site_news)
+
+    class Meta:
+        unique_together = ('user', 'site_news')

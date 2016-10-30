@@ -37,14 +37,21 @@ class Command(BaseCommand):
         command = message['text']
         if command == GET_SITES:
             message_ser = 'Вы можете выбрать один из сайтов с сериалами: \n'
-            message_serials = message_ser + models.SiteCinema.get_all_sites(command=GET_TV_SERIES_FOR)
-            message_n = 'Вы можете выбрать один из сайтов с новостями: \n'
-            message_news = message_n + models.SiteNews.get_all_sites(command=ALERTING_FOR_NEWS)
+            cinema_sites_names = [GET_TV_SERIES_FOR+site.name for site in bot_user.bot.sites_cinema.all()]
+            message_serials = message_ser + '\n'.join(cinema_sites_names)
+            message_n = '\n Вы можете выбрать один из сайтов с новостями: \n'
+            news_sites_names = [ALERTING_FOR_NEWS+site.name for site in bot_user.bot.sites_news.all()]
+            message_news = message_n + '\n'.join(news_sites_names)
             bot_user.send_message(message_serials + message_news)
 
         if command.startswith(GET_TV_SERIES_FOR):
-            site_name = command.split(GET_TV_SERIES_FOR).pop()
-            site = models.Site.objects.get(name=site_name)
+            site_cinema_name = command.split(GET_TV_SERIES_FOR).pop()
+            site = models.SiteCinema.objects.filter(name=site_cinema_name, bots=bot_user.bot)
+            if site:
+                site = site.get()
+            else:
+                bot_user.send_message('Бот не подписан на "{}"'.format(site_cinema_name))
+                return
             message = 'Вы можете подпасаться на следующие сериалы:\n'
             tv_series = [tv_series.name_rus + ' ' + ALERTING_FOR_TV_SERIES + str(tv_series.id)
                          for tv_series in site.tv_series.all()]
@@ -58,10 +65,18 @@ class Command(BaseCommand):
                 bot_user.send_message(message + '\n'.join(tv_series[page*count_in_page:page*count_in_page+count_in_page]))
 
         if command.startswith(ALERTING_FOR_NEWS):
-            news_name = command.split(ALERTING_FOR_NEWS).pop()
-            news = models.SiteNews.objects.get(name=news_name)
-            news.users.create(bot_user) # add
-            bot_user.send_message('Подписаны на новости {}'.format(news_name))
+            site_news_name = command.split(ALERTING_FOR_NEWS).pop()
+            news = models.SiteNews.objects.filter(name=site_news_name, bots=bot_user.bot)
+            if news:
+                news = news.get()
+            else:
+                bot_user.send_message('Бот не подписан на "{}"'.format(site_news_name))
+                return
+            if news.users.filter(user=bot_user):
+                bot_user.send_message('Вы уже подписаны на новости {}'.format(site_news_name))
+            else:
+                news.users.create(user=bot_user) # add relation MtM
+                bot_user.send_message('Подписаны на новости {}'.format(site_news_name))
 
         if command.startswith(ALERTING_FOR_TV_SERIES):
             tv_series_id = command.split(ALERTING_FOR_TV_SERIES).pop()
@@ -74,4 +89,4 @@ class Command(BaseCommand):
                     bot_user.tv_series.create(tv_series=tv_series)
                     bot_user.send_message('Теперь вы подписаны на {}\n'.format(tv_series.name_rus))
             else:
-                bot_user.send_message('Не найдено сериала ')
+                bot_user.send_message('Не найдено сериала')
