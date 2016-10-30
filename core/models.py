@@ -198,7 +198,7 @@ class UserSeries(models.Model):
     dc = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
-        if self.tv_series.bots.filter(bots=self.user.bot):
+        if self.tv_series.site.bots.filter(id=self.user.bot.id):
             return super().save(**kwargs)
 
     def __str__(self):
@@ -214,7 +214,7 @@ class UserNews(models.Model):
     dc = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
-        if self.site_news.bots.filter(bots__id=[self.user.bot.id]):
+        if self.site_news.bots.filter(id=self.user.bot.id):
             return super().save(**kwargs)
 
     def __str__(self):

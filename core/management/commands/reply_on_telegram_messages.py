@@ -82,7 +82,11 @@ class Command(BaseCommand):
             tv_series_id = command.split(ALERTING_FOR_TV_SERIES).pop()
             tv_series = models.SiteTVSeries.objects.filter(id=tv_series_id)
             if tv_series:
-                tv_series = tv_series[0]
+                tv_series = tv_series.get()
+                if not tv_series.site.bots.filter(id=bot_user.bot.id):
+                    bot_user.send_message('Не реально ^^')
+                    return
+
                 if bot_user.tv_series.filter(tv_series=tv_series):
                     bot_user.send_message('Вы уже подписаны на {}\n'.format(tv_series.name_rus))
                 else:
