@@ -6,5 +6,13 @@
     "url": "https://pythondigest.ru/",
     "name": "pythondigest"
   }
+},
+{
+  "model": "core.sitenews",
+  "pk": 2,
+  "fields": {
+    "url": "https://simpleisbetterthancomplex.com",
+    "name": "simpleisbetterthancomplex"
+  }
 }
 ]

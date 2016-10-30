@@ -4,12 +4,12 @@ from bs4 import BeautifulSoup
 import re
 import urllib
 
-SITE_URL = 'https://simpleisbetterthancomplex.com/'
+SITE_URL = 'https://simpleisbetterthancomplex.com'
 
 
 def get_all_news(page=1):
     if page == 1:
-        URL = SITE_URL + 'feed.xml'
+        URL = SITE_URL + '/feed.xml' # RSS
     else:
         return []
 
