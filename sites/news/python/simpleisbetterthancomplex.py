@@ -1,8 +1,5 @@
-import datetime
 import requests
 from bs4 import BeautifulSoup
-import re
-import urllib
 
 SITE_URL = 'https://simpleisbetterthancomplex.com'
 
@@ -14,7 +11,8 @@ def get_all_news(page=1):
         return []
 
     response = requests.get(URL)
-    content_bs = BeautifulSoup(response.content, 'lxml')
+    # content_bs = BeautifulSoup(response.content, 'lxml')
+    content_bs = BeautifulSoup(response.content, 'html.parser') #  troubles with install lxml
 
     all_news = content_bs.find_all('item')
 
