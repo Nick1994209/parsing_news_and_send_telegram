@@ -27,6 +27,11 @@ class SiteNews(Site):
         for user in self.users.all():
             user.user.send_message(message)
 
+    @classmethod
+    def get_all_sites(cls, command):
+        sites = [command + site.name for site in cls.objects.all()]
+        return '\n'.join(sites)
+
     def get_news(self):
         page = 1
 
@@ -57,6 +62,9 @@ class News(models.Model):
     name_eng = models.CharField(max_length=255, blank=True)
     number = models.FloatField(blank=True, null=True)
     dc = models.DateTimeField(default=datetime.datetime.now)
+
+    def __str__(self):
+        return self.name_rus + '  ' + self.site
 
 
 class SiteCinema(Site):
