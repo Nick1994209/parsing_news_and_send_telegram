@@ -72,7 +72,7 @@ class SiteCinema(Site):
 
     def get_new_episodes(self):
         page = 1
-        max_count_page = 3
+        max_count_page = 4
 
         while True:
             if page > max_count_page: break

@@ -1,7 +1,3 @@
-from sites.anime import animeonline
-from sites.news import pythondigest
-
-
 class General(object):
     @classmethod
     def all_sites(cls):
@@ -12,6 +8,9 @@ class General(object):
             if not callable(getattr(cls, attr)):
                 sites.append(attr)
         return ', '.join(sites)
+
+
+from sites.anime import animeonline
 
 
 class AllSitesCinema(General):
@@ -28,9 +27,14 @@ class AllSitesCinema(General):
             raise Exception("Site don't parsing")
 
 
+from sites.news.python import pythondigest
+from sites.news.python import simpleisbetterthancomplex # python/django
+
+
 class AllSitesNews(General):
     # python
     pythondigest = pythondigest
+    simpleisbetterthancomplex = simpleisbetterthancomplex
 
     @classmethod
     def get_all_news(cls, site_name, page=1):

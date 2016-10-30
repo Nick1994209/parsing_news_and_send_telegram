@@ -10,6 +10,7 @@
 ### On server
 
 on server install virtualenvwrapper
+sudo apt-get install python-lxml
 
 create env with name "django_telegram"
 
