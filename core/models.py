@@ -40,7 +40,7 @@ class SiteNews(Site):
                 news_obj = self.news.create(**news_data)
 
                 message1 = 'На сайте "{}" \n'.format(self.name)
-                message2 = ' "{}  {}" \n'.format(news_obj.name_rus, news_obj.name_eng)
+                message2 = '---"{}  {}" --- \n'.format(news_obj.name_rus, news_obj.name_eng)
                 message3 = '{}\n'.format(news_obj.description)
                 message4 = '{}\n'.format(news_obj.url if news_obj.url else '')
 
@@ -56,7 +56,13 @@ class News(models.Model):
     name_rus = models.CharField(max_length=255, blank=True)
     name_eng = models.CharField(max_length=255, blank=True)
     number = models.FloatField(blank=True, null=True)
-    dc = models.DateTimeField(default=datetime.datetime.now)
+    date = models.DateField(null=True, blank=True)
+    time = models.TimeField(null=True, blank=True)
+
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = '-date_created',
 
     def __str__(self):
         return self.name_rus + '  ' + self.site
@@ -99,6 +105,9 @@ class SiteCinema(Site):
                         number=number,
                         url=episode.get('url', ''))
 
+                    tv_series.date_release_last_ongoing_series = datetime.datetime.now()
+                    tv_series.save()
+
                     message1 = 'На сайте "{}" \n'.format(tv_series.site.name)
                     message2 = ' "{}" ({})\n'.format(tv_series.name_rus, tv_series.name_eng)
                     message3 = 'Вышла новая серия {} {}'.format(series.number, series.url)
@@ -110,27 +119,33 @@ class SiteCinema(Site):
                 break
 
 
-class SiteTVSeries(models.Model):
+class TVSeries(models.Model):
     site = models.ForeignKey(SiteCinema, related_name='tv_series')
     name_rus = models.CharField(max_length=255, blank=True)
     name_eng = models.CharField(max_length=255, blank=True)
 
+    date_release_last_ongoing_series = models.DateTimeField(default=datetime.datetime.now)
+
     def users_send_message(self, message):
         for user in self.users.all():
             user.user.send_message(message)
+
+    class Meta:
+        ordering = 'date_release_last_ongoing_series',
 
     def __str__(self):
         return '%s %s site=%s' % (self.name_rus, self.name_eng, self.site)
 
 
 class Series(models.Model):
-    tv_series = models.ForeignKey(SiteTVSeries, related_name='series')
+    tv_series = models.ForeignKey(TVSeries, related_name='series')
     number = models.FloatField(models.Model, default=1)
     url = models.URLField(blank=True)
-    dc = models.DateTimeField(default=datetime.datetime.now)
+    date_created = models.DateTimeField(default=datetime.datetime.now)
 
     class Meta:
         unique_together = 'tv_series', 'number'
+        ordering = '-date_created',
 
     def __str__(self):
         return '{} {}'.format(self.number, self.tv_series)
@@ -162,7 +177,22 @@ class TelegramBot(models.Model):
                 self.username = about_bot['result']['username']
             if not hasattr(self, 'name') or not self.name:
                 self.name = about_bot['result']['first_name']
+
+        self.clear_users_relation_with_unsubscribing_sites()
+
         return super().save(**kwargs)
+
+    def clear_users_relation_with_unsubscribing_sites(self):
+        'if relation with sites is closed need delete relations bot_users with sites'
+        users_id = [user.id for user in self.users.all()]
+
+        # sites_news
+        subscribe_on_sites_news = [site.id for site in self.sites_news.all()]
+        UserNews.objects.filter(user__in=users_id).exclude(site_news__in=subscribe_on_sites_news).delete()
+
+        # sites_cinema
+        subscribe_on_sites_cinema = [site.id for site in self.sites_cinema.all()]
+        UserSeries.objects.filter(user__in=users_id).exclude(tv_series__site__in=subscribe_on_sites_cinema).delete()
 
     def __str__(self):
         return self.name
@@ -194,8 +224,8 @@ class TelegramUser(models.Model):
 
 class UserSeries(models.Model):
     user = models.ForeignKey(TelegramUser, related_name='tv_series')
-    tv_series = models.ForeignKey(SiteTVSeries, related_name='users')
-    dc = models.DateTimeField(auto_now_add=True)
+    tv_series = models.ForeignKey(TVSeries, related_name='users')
+    date_created = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
         if self.tv_series.site.bots.filter(id=self.user.bot.id):
@@ -211,7 +241,7 @@ class UserSeries(models.Model):
 class UserNews(models.Model):
     user = models.ForeignKey(TelegramUser, related_name='sites_news')
     site_news = models.ForeignKey(SiteNews, related_name='users')
-    dc = models.DateTimeField(auto_now_add=True)
+    date_created = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
         if self.site_news.bots.filter(id=self.user.bot.id):
