@@ -153,12 +153,12 @@ class Series(models.Model):
 
 class TelegramBot(models.Model):
     token = models.CharField(max_length=255)
-    name = models.CharField(max_length=255, blank=True, help_text='Set in save')
-    username = models.CharField(max_length=255, blank=True) # set in save
+    name = models.CharField(max_length=255, blank=True, help_text='Set from telegram.api get_me')
+    username = models.CharField(max_length=255, blank=True, help_text='Set from telegram.api get_me') # set in save
     last_message_id = models.IntegerField(default=0)
 
-    sites_cinema = models.ManyToManyField(SiteCinema, related_name='bots', blank=True, null=True)
-    sites_news = models.ManyToManyField(SiteNews, related_name='bots', blank=True, null=True)
+    sites_cinema = models.ManyToManyField(SiteCinema, related_name='bots', blank=True)
+    sites_news = models.ManyToManyField(SiteNews, related_name='bots', blank=True)
 
     def get_bot(self):
         return Bot(self.token)

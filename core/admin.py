@@ -7,7 +7,7 @@ admin.site.register(models.News)
 admin.site.register(models.UserNews)
 
 admin.site.register(models.SiteCinema)
-admin.site.register(models.SiteTVSeries)
+admin.site.register(models.TVSeries)
 admin.site.register(models.Series)
 
 admin.site.register(models.UserSeries)
