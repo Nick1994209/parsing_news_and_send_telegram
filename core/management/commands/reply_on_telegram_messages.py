@@ -1,5 +1,5 @@
 from time import sleep
-
+from core import create_log
 from django.core.management.base import BaseCommand
 from core import models
 
@@ -19,20 +19,28 @@ class Command(BaseCommand):
 
         while True:
 
-            for bot in models.TelegramBot.objects.all():
-                for message in bot.get_last_messages():
-
-                    bot_user = bot.users.filter(user_id=message['from']['id'])
-                    if bot_user:
-                        bot_user = bot_user.get()
-                    else:
-                        bot_user = bot.users.create(
-                            user_id=message['from']['id'], username=message['from'].get('username', ''),
-                            first_name=message['from']['first_name'], last_name=message['from'].get('last_name', ''),
-                        )
-                    self.get_command(bot_user, message)
+            try:
+                self.reply_on_message()
+            except Exception as e:
+                create_log.create(str(e), 'reply_on_telegram_messages.log')
 
             sleep(10)
+
+    def reply_on_message(self):
+        for bot in models.TelegramBot.objects.all():
+            for message in bot.get_last_messages():
+
+                bot_user = bot.users.filter(user_id=message['from']['id'])
+                if bot_user:
+                    bot_user = bot_user.get()
+                else:
+                    bot_user = bot.users.create(
+                        user_id=message['from']['id'],
+                        username=message['from'].get('username', ''),
+                        first_name=message['from']['first_name'],
+                        last_name=message['from'].get('last_name', ''),
+                    )
+                self.get_command(bot_user, message)
 
     @staticmethod
     def get_command(bot_user, message):
@@ -131,3 +139,4 @@ class Command(BaseCommand):
             return
 
         bot_user.send_message('Неизвестная команда :-) Выберете команду " {} " для помощи'.format(HELP))
+        raise Exception('Не извенстная комманда, чел')
