@@ -8,6 +8,8 @@ GET_SITES = '/start'
 GET_TV_SERIES_FOR = '/site_cinema__'
 ALERTING_FOR_NEWS = '/site_news__'
 ALERTING_FOR_TV_SERIES = '/tv_series__'
+HELP = '/help'
+MY_SUBSCRIPTIONS = '/my_subscriptions'
 
 
 class Command(BaseCommand):
@@ -36,13 +38,18 @@ class Command(BaseCommand):
     def get_command(bot_user, message):
         command = message['text']
         if command == GET_SITES:
-            message_ser = 'Вы можете выбрать один из сайтов с сериалами: \n'
+            message_serials = ''
             cinema_sites_names = [GET_TV_SERIES_FOR+site.name for site in bot_user.bot.sites_cinema.all()]
-            message_serials = message_ser + '\n'.join(cinema_sites_names)
-            message_n = '\n Вы можете выбрать один из сайтов с новостями: \n'
+            if cinema_sites_names:
+                message_ser = '\n Вы можете выбрать один из сайтов с сериалами: \n'
+                message_serials = message_ser + '\n'.join(cinema_sites_names)
+            message_news = ''
             news_sites_names = [ALERTING_FOR_NEWS+site.name for site in bot_user.bot.sites_news.all()]
-            message_news = message_n + '\n'.join(news_sites_names)
+            if news_sites_names:
+                message_n = '\n Вы можете выбрать один из сайтов с новостями: \n'
+                message_news = message_n + '\n'.join(news_sites_names)
             bot_user.send_message(message_serials + message_news)
+            return
 
         if command.startswith(GET_TV_SERIES_FOR):
             site_cinema_name = command.split(GET_TV_SERIES_FOR).pop()
@@ -63,6 +70,7 @@ class Command(BaseCommand):
                 pages = int(count_tv_series / count_in_page) + 1
             for page in range(pages):
                 bot_user.send_message(message + '\n'.join(tv_series[page*count_in_page:page*count_in_page+count_in_page]))
+            return
 
         if command.startswith(ALERTING_FOR_NEWS):
             site_news_name = command.split(ALERTING_FOR_NEWS).pop()
@@ -77,10 +85,11 @@ class Command(BaseCommand):
             else:
                 news.users.create(user=bot_user) # add relation MtM
                 bot_user.send_message('Подписаны на новости {}'.format(site_news_name))
+            return
 
         if command.startswith(ALERTING_FOR_TV_SERIES):
             tv_series_id = command.split(ALERTING_FOR_TV_SERIES).pop()
-            tv_series = models.SiteTVSeries.objects.filter(id=tv_series_id)
+            tv_series = models.TVSeries.objects.filter(id=tv_series_id)
             if tv_series:
                 tv_series = tv_series.get()
                 if not tv_series.site.bots.filter(id=bot_user.bot.id):
@@ -94,3 +103,31 @@ class Command(BaseCommand):
                     bot_user.send_message('Теперь вы подписаны на {}\n'.format(tv_series.name_rus))
             else:
                 bot_user.send_message('Не найдено сериала')
+            return
+
+        if command.startswith(MY_SUBSCRIPTIONS):
+            sites_news = [site.site_news.name + '\n' + site.site_news.description for site in bot_user.sites_news.all()]
+            my_sites_news = ''
+            if sites_news:
+                my_sites_news = 'Мои новости :\n' + '\n'.join(sites_news) + '\n'
+            sites_tv_series = ['{}'.format(user_tv_series.tv_series) for user_tv_series in bot_user.tv_series.all()]
+            my_tv_series = ''
+            if sites_tv_series:
+                my_tv_series = 'Мои сериалы :\n' +'\n'.join(sites_tv_series)
+            if my_tv_series or my_sites_news:
+                bot_user.send_message(my_sites_news + my_tv_series)
+            else:
+                bot_user.send_message('Вы ни на что не подписаны :(  Выберете {}'.format(GET_SITES))
+            return
+
+        if command == HELP:
+            bot_user.send_message('''
+  Бот позволяет получать информацию о новостях или сериях на которые вы подписаны.
+  Для получения просмотра сайтов - выберете {start}
+  Если хотите посмотреть на что вы уже подписаны - {subscribe}
+  Исходники + просмотр списка ботов на
+  https://github.com/Nick1994209/parsing_news_and_send_telegram
+                '''.format(start=GET_SITES, subscribe=MY_SUBSCRIPTIONS))
+            return
+
+        bot_user.send_message('Неизвестная команда :-) Выберете команду " {} " для помощи'.format(HELP))

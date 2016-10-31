@@ -1,4 +1,4 @@
-import datetime
+from django.utils import timezone
 from django.db import models
 from sites import AllSitesCinema, AllSitesNews
 from telegram import Bot
@@ -7,7 +7,8 @@ from telegram import Bot
 class Site(models.Model):
     url = models.URLField(verbose_name='Site address')
     name = models.CharField(max_length=255, unique=True)
-    
+    description = models.CharField(max_length=60, blank=True)
+
     class Meta:
         abstract = True
 
@@ -16,7 +17,6 @@ class Site(models.Model):
         
         
 class SiteNews(Site):
-
     def save(self, **kwargs):
         if hasattr(AllSitesNews, self.name):
             return super().save()
@@ -65,7 +65,8 @@ class News(models.Model):
         ordering = '-date_created',
 
     def __str__(self):
-        return self.name_rus + '  ' + self.site
+        name = self.name_rus if self.name_rus else self.name_eng
+        return name + ' site={}'.format(self.site)
 
 
 class SiteCinema(Site):
@@ -105,7 +106,7 @@ class SiteCinema(Site):
                         number=number,
                         url=episode.get('url', ''))
 
-                    tv_series.date_release_last_ongoing_series = datetime.datetime.now()
+                    tv_series.date_release_last_ongoing_series = timezone.now()
                     tv_series.save()
 
                     message1 = 'На сайте "{}" \n'.format(tv_series.site.name)
@@ -124,14 +125,14 @@ class TVSeries(models.Model):
     name_rus = models.CharField(max_length=255, blank=True)
     name_eng = models.CharField(max_length=255, blank=True)
 
-    date_release_last_ongoing_series = models.DateTimeField(default=datetime.datetime.now)
+    date_release_last_ongoing_series = models.DateTimeField(default=timezone.now)
 
     def users_send_message(self, message):
         for user in self.users.all():
             user.user.send_message(message)
 
     class Meta:
-        ordering = 'date_release_last_ongoing_series',
+        ordering = '-date_release_last_ongoing_series',
 
     def __str__(self):
         return '%s %s site=%s' % (self.name_rus, self.name_eng, self.site)
@@ -141,7 +142,7 @@ class Series(models.Model):
     tv_series = models.ForeignKey(TVSeries, related_name='series')
     number = models.FloatField(models.Model, default=1)
     url = models.URLField(blank=True)
-    date_created = models.DateTimeField(default=datetime.datetime.now)
+    date_created = models.DateTimeField(default=timezone.now)
 
     class Meta:
         unique_together = 'tv_series', 'number'
@@ -177,8 +178,8 @@ class TelegramBot(models.Model):
                 self.username = about_bot['result']['username']
             if not hasattr(self, 'name') or not self.name:
                 self.name = about_bot['result']['first_name']
-
-        self.clear_users_relation_with_unsubscribing_sites()
+        if self.id:
+            self.clear_users_relation_with_unsubscribing_sites()
 
         return super().save(**kwargs)
 
