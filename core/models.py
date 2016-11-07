@@ -83,36 +83,35 @@ class SiteCinema(Site):
 
         while True:
             if page > max_count_page: break
-            episodes = AllSitesCinema.get_all_series(self.name, page)
-            if not episodes: break
+            page_series = AllSitesCinema.get_all_series(self.name, page)
+            if not page_series: break
 
             next_page = True
 
-            for episode in episodes:
-                tv_series = self.tv_series.filter(name_rus=episode['name_rus'])
+            for series in page_series:
+                about_tv_series = series['tv_series']
+                about_episode = series['episode']
+                tv_series = self.tv_series.filter(**about_tv_series)
                 if tv_series:
                     tv_series = tv_series.get()
                 else:
-                    tv_series = self.tv_series.create(
-                        name_rus=episode.get('name_rus', ''),
-                        name_eng=episode.get('name_eng', ''))
+                    tv_series = self.tv_series.create(**about_tv_series)
 
-                number = number=episode.get('number', '1')
+                number = about_episode.get('number', '1')
                 series = tv_series.series.filter(number__gte=number)
                 if series:
                     next_page = False
                 else:
-                    series = tv_series.series.create(
-                        number=number,
-                        url=episode.get('url', ''))
+                    series = tv_series.series.create(**about_episode)
 
                     tv_series.date_release_last_ongoing_series = timezone.now()
                     tv_series.save()
 
                     message1 = 'На сайте "{}" \n'.format(tv_series.site.name)
-                    message2 = ' "{}" ({})\n'.format(tv_series.name_rus, tv_series.name_eng)
-                    message3 = 'Вышла новая серия {} {}'.format(series.number, series.url)
-                    tv_series.users_send_message(message1 + message2 + message3)
+                    message2 = ' "{}" \n'.format(tv_series.name_rus)
+                    message3 = 'Вышла новая серия {} {} \n'.format(series.number, series.url)
+                    message4 = series.description
+                    tv_series.users_send_message(message1 + message2 + message3 + message4)
 
             if next_page:
                 page += 1
@@ -141,6 +140,7 @@ class TVSeries(models.Model):
 class Series(models.Model):
     tv_series = models.ForeignKey(TVSeries, related_name='series')
     number = models.FloatField(models.Model, default=1)
+    description = models.TextField(blank=True)
     url = models.URLField(blank=True)
     date_created = models.DateTimeField(default=timezone.now)
 

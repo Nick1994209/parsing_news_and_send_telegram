@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# sudo -u ubuntu -H sh -c "cd ~/$PROJECT && source run_app.sh " &&
 
-workon django_telegram &&
+workon django_telegram;
 
 
 .././manage.py parsing_cinema_sites &

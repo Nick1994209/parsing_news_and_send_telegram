@@ -5,7 +5,45 @@ import re
 SITE_URL = 'http://animeonline.su'
 
 
-def get_all_episodes(page=1):
+def get_all_episodes(page=1): # RSS
+    URL = SITE_URL + '/zend/episodes.xml'
+    if page > 2:
+        return []
+
+    response = requests.get(URL)
+
+    content_bs = BeautifulSoup(response.content, 'html.parser')
+    anime_items_bs = content_bs.find_all('item')
+
+    anime_values = []
+    for item_bs in anime_items_bs:
+        episode = {}
+        tv_series = {}
+
+        row_name = item_bs.find('title').getText()
+
+        begin_str, end_str = '[!\[CDATA\[', '(\]\]'
+        regular_rm_CDATA = '[({begin_str}),({end_str})]'.format(begin_str=begin_str, end_str=end_str)
+
+        tv_series['name_rus'] = re.sub(regular_rm_CDATA, '', row_name)
+
+        episode['url'] = item_bs.find('link').getText()
+
+        description_row1 = re.sub(regular_rm_CDATA, '', item_bs.find('description').getText())
+        description_row2 = re.sub('<img(.*)>', '', description_row1)
+        description_row3 = re.sub('Эпизод # ', '', description_row2)
+
+        number = description_row3.split(' ')[0]
+
+        episode['number'] = number
+        episode['description'] = description_row3
+
+        anime_values.append({'episode': episode, 'tv_series': tv_series})
+
+    return anime_values
+
+
+def get_all_episodes_NOT_RSS(page=1): #
     URL = SITE_URL + '/ongoing/'
 
     response = requests.get(URL + 'page/{}'.format(page))
@@ -16,22 +54,22 @@ def get_all_episodes(page=1):
 
     anime_values = []
     for anime_div_bs in anime_divs:
-        episod = {}
-        episod['name_rus'] = anime_div_bs.find('span', {"class": "label_rus"}).decode_contents()
-        episod['name_eng'] = anime_div_bs.find('span', {"class": "label_eng"}).decode_contents()
+        episode = {}
+        episode['name_rus'] = anime_div_bs.find('span', {"class": "label_rus"}).decode_contents()
+        episode['name_eng'] = anime_div_bs.find('span', {"class": "label_eng"}).decode_contents()
 
         for href_bs in anime_div_bs.find_all('a'):
             if '!/episode/' in href_bs['href']:
-                episod_href = href_bs['href']
-                episod['url'] = SITE_URL + episod_href
+                episode_href = href_bs['href']
+                episode['url'] = SITE_URL + episode_href
 
             href_html = href_bs.decode_contents()
             if 'эпизод' in href_html:
                 if re.findall('\d+', href_html):
-                    episod_number = int(re.findall('\d+', href_html)[0])
-                    episod['number'] = episod_number
+                    episode_number = int(re.findall('\d+', href_html)[0])
+                    episode['number'] = episode_number
 
-        anime_values.append(episod)
+        anime_values.append(episode)
 
     return anime_values
 

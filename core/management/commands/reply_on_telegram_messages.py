@@ -139,4 +139,3 @@ class Command(BaseCommand):
             return
 
         bot_user.send_message('Неизвестная команда :-) Выберете команду " {} " для помощи'.format(HELP))
-        raise Exception('Не извенстная комманда, чел')
