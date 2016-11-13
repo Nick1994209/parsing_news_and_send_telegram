@@ -9,7 +9,6 @@ class Pythondigest:
 
     @classmethod
     def get_all_news(cls, page=1):
-        print('im in Pythondidgest')
         URL = cls.SITE_URL + '/feed/'
 
         response = requests.get(URL + '?page/{}'.format(page))
@@ -33,5 +32,4 @@ class Pythondigest:
             news['name_rus'] = news_bs.find('h4').find('a').decode_contents()
 
             news_values.append(news)
-        print(news_values)
         return news_values

@@ -86,6 +86,8 @@ class SiteCinema(Site):
             page_series = AllSitesCinema.get_all_series(self.name, page)
             if not page_series: break
 
+            page_series.reverse() # from last to new series
+
             next_page = True
 
             for series in page_series:
@@ -97,8 +99,8 @@ class SiteCinema(Site):
                 else:
                     tv_series = self.tv_series.create(**about_tv_series)
 
-                number = about_episode.get('number', '1')
-                series = tv_series.series.filter(number__gte=number)
+                episode_number = about_episode.get('number', '1')
+                series = tv_series.series.filter(number__gte=episode_number)
                 if series:
                     next_page = False
                 else:

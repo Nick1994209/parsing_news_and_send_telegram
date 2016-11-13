@@ -35,11 +35,8 @@ class AllSitesNews(General):
 
     @classmethod
     def get_all_news(cls, site_name, page=1):
-        print(site_name)
-
         site = getattr(cls, site_name, None)
         if site:
-            print('hello')
             return site.get_all_news(page)
         else:
             raise Exception("Site don't parsing")

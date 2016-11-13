@@ -22,7 +22,7 @@ class Command(BaseCommand):
             try:
                 self.reply_on_message()
             except Exception as e:
-                create_log.create(str(e), 'reply_on_telegram_messages.log')
+                create_log.create('bot_error \t' + str(e), 'reply_on_telegram_messages.log')
 
             sleep(10)
 
@@ -40,7 +40,13 @@ class Command(BaseCommand):
                         first_name=message['from']['first_name'],
                         last_name=message['from'].get('last_name', ''),
                     )
-                self.get_command(bot_user, message)
+
+                try:
+                    self.get_command(bot_user, message)
+                except Exception as e:
+                    create_log.create(
+                        'command_error \t' + str(e), 'reply_on_telegram_messages.log'
+                    )
 
     @staticmethod
     def get_command(bot_user, message):

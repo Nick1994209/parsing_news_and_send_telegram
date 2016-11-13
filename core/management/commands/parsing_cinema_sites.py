@@ -19,11 +19,7 @@ class Command(BaseCommand):
             if 1 < current_hour < 8:
                 sleep((8 - current_hour) * hour)
 
-            try:
-                self.parsing()
-            except Exception as e:
-                print('exception! cinema_sites: ' + str(e))
-                create_log.create(str(e), 'parsing_cinema_sites.log')
+            self.parsing()
 
             two_month_ago = now - datetime.timedelta(days=60)
             models.TVSeries.objects.filter(
@@ -34,4 +30,8 @@ class Command(BaseCommand):
 
     def parsing(self):
         for site in models.SiteCinema.objects.all():
-            site.get_new_episodes()
+            try:
+                site.get_new_episodes()
+            except Exception as e:
+                print('exception! cinema_sites: ' + str(e))
+                create_log.create(str(e), 'parsing_cinema_sites.log')
