@@ -20,6 +20,7 @@ class Command(BaseCommand):
             try:
                 self.parsing()
             except Exception as e:
+                print('exception! news_sites: ' + str(e))
                 create_log.create(str(e), 'parsing_news_sites.log')
 
             sleep(6 * hour)

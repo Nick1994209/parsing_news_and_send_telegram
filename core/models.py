@@ -131,7 +131,7 @@ class TVSeries(models.Model):
             user.user.send_message(message)
 
     class Meta:
-        ordering = '-date_release_last_ongoing_series',
+        ordering = 'date_release_last_ongoing_series',
 
     def __str__(self):
         return '%s %s site=%s' % (self.name_rus, self.name_eng, self.site)

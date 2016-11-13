@@ -5,7 +5,6 @@ source /home/ubuntu/.virtualenvs/django_telegram/bin/activate
 
 echo 'ACTIVATED django_telegram'
 
-$current_pwd='pwd'
 
 cd  /home/ubuntu/parsing_news_and_send_telegram/scripts/ &&
 source /home/ubuntu/parsing_news_and_send_telegram/scripts/run.sh

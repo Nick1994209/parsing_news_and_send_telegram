@@ -1,3 +1,7 @@
+from sites import sites_cinema
+from sites import news
+
+
 class General(object):
     @classmethod
     def all_sites(cls):
@@ -10,12 +14,9 @@ class General(object):
         return ', '.join(sites)
 
 
-from sites.anime import animeonline
-
-
 class AllSitesCinema(General):
     # anime
-    animeonline = anime.animeonline
+    animeonline = sites_cinema.Animeonline
 
     @classmethod
     def get_all_series(cls, site_name, page=1):
@@ -27,20 +28,18 @@ class AllSitesCinema(General):
             raise Exception("Site don't parsing")
 
 
-from sites.news.python import pythondigest
-from sites.news.python import simpleisbetterthancomplex # python/django
-
-
 class AllSitesNews(General):
     # python
-    pythondigest = pythondigest
-    simpleisbetterthancomplex = simpleisbetterthancomplex
+    pythondigest = news.Pythondigest
+    simpleisbetterthancomplex = news.Simpleisbetterthancomplex
 
     @classmethod
     def get_all_news(cls, site_name, page=1):
+        print(site_name)
 
         site = getattr(cls, site_name, None)
         if site:
+            print('hello')
             return site.get_all_news(page)
         else:
             raise Exception("Site don't parsing")

@@ -22,6 +22,7 @@ class Command(BaseCommand):
             try:
                 self.parsing()
             except Exception as e:
+                print('exception! cinema_sites: ' + str(e))
                 create_log.create(str(e), 'parsing_cinema_sites.log')
 
             two_month_ago = now - datetime.timedelta(days=60)
