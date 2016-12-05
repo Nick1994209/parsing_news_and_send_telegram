@@ -11,21 +11,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print('Parsing cinema sites run')
-        hour = 60 * 60
 
         while True:
-            now = timezone.now()
-            current_hour = now.hour # AM
-            if 1 < current_hour < 8:
-                sleep((8 - current_hour) * hour)
-
+            self.grab_sleep()
             self.parsing()
+            self.delete_old_tvseries()
 
-            two_month_ago = now - datetime.timedelta(days=60)
-            models.TVSeries.objects.filter(
-                date_release_last_ongoing_series__lte=two_month_ago
-            ).delete()
+    def grab_sleep(self):
+        hour = 60 * 60
 
+        now = timezone.now()
+        current_hour = now.hour  # AM
+
+        # night
+        if 1 < current_hour < 8:
+            sleep((8 - current_hour) * hour)
+        else:
             sleep(1 * hour)
 
     def parsing(self):
@@ -35,3 +36,9 @@ class Command(BaseCommand):
             except Exception as e:
                 print('exception! cinema_sites: ' + str(e))
                 create_log.create(str(e), 'parsing_cinema_sites.log')
+
+    def delete_old_tvseries(self):
+        now = timezone.now()
+        month_ago = now - datetime.timedelta(days=30)
+        models.TVSeries.objects.filter(date_release_last_ongoing_series__lte=month_ago)\
+            .delete()

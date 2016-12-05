@@ -36,6 +36,10 @@ class Animeonline:
             description_row3 = re.sub('Эпизод # ', '', description_row2)
 
             number = description_row3.split(' ')[0]
+            if re.findall('[\d,\.]+', number):
+                number = re.findall('[\d,\.]+', number)[0]
+            else:
+                number = '1'
 
             episode['number'] = number
             episode['description'] = description_row3

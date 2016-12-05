@@ -1,5 +1,7 @@
 from django.utils import timezone
 from django.db import models
+
+from core.tools import prepare_dict, prepare_list_dict
 from sites import AllSitesCinema, AllSitesNews
 from telegram import Bot
 
@@ -28,10 +30,12 @@ class SiteNews(Site):
             user.user.send_message(message)
 
     def get_news(self):
-        page = 1
+        all_page_news = AllSitesNews.get_all_news(self.name)
 
-        all_page_news = AllSitesNews.get_all_news(self.name, page)
+        if not all_page_news:
+            return
 
+        all_page_news = prepare_list_dict(all_page_news)
         for news_data in all_page_news:
             news_obj = self.news.filter(**news_data)
             if news_obj:
@@ -86,7 +90,8 @@ class SiteCinema(Site):
             page_series = AllSitesCinema.get_all_series(self.name, page)
             if not page_series: break
 
-            page_series.reverse() # from last to new series
+            page_series.reverse()  # from last to new series
+            page_series = prepare_list_dict(page_series)
 
             next_page = True
 
