@@ -9,7 +9,7 @@ class Pythondigest:
 
     @classmethod
     def get_all_news(cls, page=1):
-        URL = cls.SITE_URL + '/feed/'
+        URL = cls.SITE_URL + '/rss/'
 
         response = requests.get(URL + '?page/{}'.format(page))
         content_bs = BeautifulSoup(response.content, 'html.parser')
