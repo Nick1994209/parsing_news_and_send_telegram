@@ -1,6 +1,7 @@
 ## БОТ для телеграма
 
-#### Сейчас доступен для сайта http://animeonline.su/
+#### Сейчас доступен для сайтов:
+##### animeonline  pythondigest   simpleisbetterthancomplex
 #### animeonline_bot  
 
 Бот позволяет получать последние вышедшие сериалы, аниме
