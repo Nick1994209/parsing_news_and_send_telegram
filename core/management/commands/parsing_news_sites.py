@@ -22,7 +22,7 @@ class Command(BaseCommand):
             sleep(6 * hour)
 
     def parsing(self):
-        for site in models.SiteNews.objects.all():
+        for site in models.SiteNews.objects.filter(bots__users__isnull=False):
             try:
                 site.get_news()
             except Exception as e:

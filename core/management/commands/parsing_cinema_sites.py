@@ -13,9 +13,9 @@ class Command(BaseCommand):
         print('Parsing cinema sites run')
 
         while True:
-            self.grab_sleep()
             self.parsing()
             self.delete_old_tvseries()
+            self.grab_sleep()
 
     def grab_sleep(self):
         hour = 60 * 60
@@ -30,7 +30,7 @@ class Command(BaseCommand):
             sleep(1 * hour)
 
     def parsing(self):
-        for site in models.SiteCinema.objects.all():
+        for site in models.SiteCinema.objects.filter(bots__users__isnull=False):
             try:
                 site.get_new_episodes()
             except Exception as e:

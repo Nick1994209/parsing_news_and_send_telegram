@@ -1,11 +1,10 @@
 #!/bin/bash
 
 
-workon django_telegram;
+source /home/ubuntu/.virtualenvs/django_telegram/bin/activate
+
+echo 'ACTIVATED django_telegram'
 
 
-.././manage.py parsing_cinema_sites &
-.././manage.py parsing_news_sites &
-.././manage.py reply_on_telegram_messages &
-
-.././manage.py runserver 0.0.0.0:8000 &
+cd  /home/ubuntu/parsing_news_and_send_telegram/scripts/ &&
+source /home/ubuntu/parsing_news_and_send_telegram/scripts/run_commands_with_server.sh
