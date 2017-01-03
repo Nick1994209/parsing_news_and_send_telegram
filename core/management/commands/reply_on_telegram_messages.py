@@ -1,8 +1,8 @@
 from time import sleep
-from core import create_log
-from django.core.management.base import BaseCommand
-from core import models
 
+from django.core.management.base import BaseCommand
+
+from core import create_log, models
 
 GET_SITES = '/start'
 GET_TV_SERIES_FOR = '/site_cinema__'

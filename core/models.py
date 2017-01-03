@@ -1,7 +1,7 @@
-from django.utils import timezone
 from django.db import models
+from django.utils import timezone
 
-from core.tools import prepare_dict, prepare_list_dict
+from core.tools import prepare_list_dict
 from sites import AllSitesCinema, AllSitesNews
 from telegram import Bot
 

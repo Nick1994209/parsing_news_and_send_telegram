@@ -1,0 +1,20 @@
+[
+{
+    "model": "core.sitenews",
+    "pk": 1,
+    "fields": {
+        "url": "https://pythondigest.ru/",
+        "name": "pythondigest",
+        "description": ""
+    }
+},
+{
+    "model": "core.sitenews",
+    "pk": 2,
+    "fields": {
+        "url": "https://simpleisbetterthancomplex.com",
+        "name": "simpleisbetterthancomplex",
+        "description": ""
+    }
+}
+]

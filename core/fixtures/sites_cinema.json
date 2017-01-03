@@ -1,0 +1,11 @@
+[
+{
+    "model": "core.sitecinema",
+    "pk": 1,
+    "fields": {
+        "url": "http://animeonline.su/ongoing/",
+        "name": "animeonline",
+        "description": ""
+    }
+}
+]
