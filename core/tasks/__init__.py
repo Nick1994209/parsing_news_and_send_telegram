@@ -3,13 +3,13 @@ from django.db import IntegrityError
 from core import create_log
 from .parsing_cinema_sites import parsing_cinema_sites
 from .parsing_news_sites import parsing_news_sites
-from .reply_on_telegram_messages import reply_on_telegram_messages
+from .reply_on_messages import reply_on_telegram_messages
 
 from django_q.tasks import schedule, Schedule
 
 
 def task_hook(task):
-    message = '{task}'.format(task='hz kakoi task')  # task.__name__
+    message = '{task} {func}'.format(task=task.group, func=task.func)
     create_log.create(message, 'tasks.log')
 
 
@@ -35,7 +35,7 @@ def create_tasks():
             # repeats=8,
             # next_run=arrow.utcnow().replace(hour=18, minute=0),
         )
-    except IndentationError:
+    except IntegrityError:
         pass
 
     try:
@@ -45,7 +45,7 @@ def create_tasks():
             schedule_type=Schedule.MINUTES,
             minutes=2,
         )
-    except IndentationError:
+    except IntegrityError:
         pass
 
 

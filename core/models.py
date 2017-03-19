@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 from core.tools import prepare_list_dict
-from sites import AllSitesCinema, AllSitesNews
+from sites import AllSitesCinema, AllSitesNews, rss_parser
 from telegram import Bot
 
 
@@ -16,7 +16,41 @@ class Site(models.Model):
 
     def __str__(self):
         return self.name
-        
+
+
+class Rss(Site):
+    def get_news(self):
+        parsed_news = rss_parser(self.url)
+
+        for news in parsed_news:
+            self.news.get_or_create(
+                title=news.get('title', '').strip(),
+                url=news.get('link', '').strip(),
+                description=self.get_description(news).strip()
+            )
+
+    def users_send_message(self, message):
+        for user in self.users.all():
+            user.user.send_message(message)
+
+    @staticmethod
+    def get_description(news):
+        if news.get('summary') and isinstance(news.get('summary'), str):
+            return news.get('summary')
+        if news.get('summary_detail') and isinstance(news.get('summary_detail'), str):
+            return news.get('summary_detail')
+        return ''
+
+
+class RssNews(models.Model):
+    rss = models.ForeignKey(Rss, related_name='news')
+    url = models.CharField(max_length=255, blank=True)
+    title = models.TextField(blank=True)
+    description = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.title
+
         
 class SiteNews(Site):
     def save(self, **kwargs):
@@ -167,6 +201,7 @@ class TelegramBot(models.Model):
 
     sites_cinema = models.ManyToManyField(SiteCinema, related_name='bots', blank=True)
     sites_news = models.ManyToManyField(SiteNews, related_name='bots', blank=True)
+    rss = models.ManyToManyField(Rss, related_name='bots', blank=True)
 
     def get_bot(self):
         return Bot(self.token)
@@ -228,6 +263,19 @@ class TelegramUser(models.Model):
 
     def __str__(self):
         return '{user_id} {username} bot={bot}'.format(user_id=self.user_id, username=self.username, bot=self.bot.username)
+
+
+class UserRss(models.Model):
+    user = models.ForeignKey(TelegramUser, related_name='rss')
+    rss = models.ForeignKey(Rss, related_name='users')
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def save(self, **kwargs):
+        if self.rss.bots.filter(id=self.user.bot.id):
+            return super().save(**kwargs)
+
+    class Meta:
+        unique_together = ('user', 'rss')
 
 
 class UserSeries(models.Model):

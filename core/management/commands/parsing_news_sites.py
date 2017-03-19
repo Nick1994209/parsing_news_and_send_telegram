@@ -3,7 +3,7 @@ from time import sleep
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from core import create_log, models
+from core import create_log, models, tasks
 
 
 class Command(BaseCommand):
@@ -17,7 +17,7 @@ class Command(BaseCommand):
             if 1 < current_hour < 8:
                 sleep((8 - current_hour) * hour)
 
-            self.parsing()
+            tasks.parsing_news_sites()
 
             sleep(6 * hour)
 

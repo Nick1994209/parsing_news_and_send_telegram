@@ -1,5 +1,6 @@
-from sites import sites_cinema
-from sites import news
+from . import sites_cinema
+from . import news
+from .rss import rss_parser
 
 
 class General(object):

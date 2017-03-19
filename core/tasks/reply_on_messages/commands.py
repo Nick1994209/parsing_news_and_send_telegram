@@ -1,51 +1,43 @@
-from core import create_log, models
+from core import models
 
-GET_SITES = '/start'
+GET_SITES = '/get_sites__'
 GET_TV_SERIES_FOR = '/site_cinema__'
 ALERTING_FOR_NEWS = '/site_news__'
 ALERTING_FOR_TV_SERIES = '/tv_series__'
-HELP = '/help'
-MY_SUBSCRIPTIONS = '/my_subscriptions'
+HELP = '/help__'
+MY_SUBSCRIPTIONS = '/my_subscriptions__'
 
 
-def reply_on_telegram_messages(*args, **kwargs):
-    for bot in models.TelegramBot.objects.all():
-        for message in bot.get_last_messages():
+class Commands:
+    @classmethod
+    def get_command(cls, bot_user, message):
 
-            bot_user = bot.users.filter(user_id=message['from']['id']).first()
-            if not bot_user:
-                bot_user = bot.users.create(
-                    user_id=message['from']['id'],
-                    username=message['from'].get('username', ''),
-                    first_name=message['from']['first_name'],
-                    last_name=message['from'].get('last_name', ''),
-                )
+        command = message['title'].lstrip('/').split('__')[0]  # example: /start__Vasya123 -> start
 
-            try:
-                get_command(bot_user, message)
-            except Exception as e:
-                create_log.create(
-                    'command_error \t' + str(e), 'reply_on_telegram_messages.log'
-                )
-    return 1
+        handler = getattr(cls, command, None)
+        if handler:
+            return handler(bot_user, message)
+        else:
+            cls.incorrect_command(bot_user, message)
 
-def get_command(bot_user, message):
-    command = message['text']
-    if command == GET_SITES:
+    @staticmethod
+    def get_sites(bot_user, message):
         message_serials = ''
-        cinema_sites_names = [GET_TV_SERIES_FOR+site.name for site in bot_user.bot.sites_cinema.all()]
+        cinema_sites_names = [GET_TV_SERIES_FOR + site.name for site in
+                              bot_user.bot.sites_cinema.all()]
         if cinema_sites_names:
             message_ser = '\n Вы можете выбрать один из сайтов с сериалами: \n'
             message_serials = message_ser + '\n'.join(cinema_sites_names)
         message_news = ''
-        news_sites_names = [ALERTING_FOR_NEWS+site.name for site in bot_user.bot.sites_news.all()]
+        news_sites_names = [ALERTING_FOR_NEWS + site.name for site in bot_user.bot.sites_news.all()]
         if news_sites_names:
             message_n = '\n Вы можете выбрать один из сайтов с новостями: \n'
             message_news = message_n + '\n'.join(news_sites_names)
         bot_user.send_message(message_serials + message_news)
-        return
 
-    if command.startswith(GET_TV_SERIES_FOR):
+    @staticmethod
+    def site_cinema(bot_user, message):
+        command = message['text']
         site_cinema_name = command.split(GET_TV_SERIES_FOR).pop()
         site = models.SiteCinema.objects.filter(name=site_cinema_name, bots=bot_user.bot)
         if site:
@@ -59,14 +51,16 @@ def get_command(bot_user, message):
         count_tv_series = len(tv_series)
         count_in_page = 40
         if count_tv_series % count_in_page == 0:
-            pages = count_tv_series/count_in_page
+            pages = count_tv_series / count_in_page
         else:
             pages = int(count_tv_series / count_in_page) + 1
         for page in range(pages):
-            bot_user.send_message(message + '\n'.join(tv_series[page*count_in_page:page*count_in_page+count_in_page]))
-        return
+            bot_user.send_message(message + '\n'.join(
+                tv_series[page * count_in_page:page * count_in_page + count_in_page]))
 
-    if command.startswith(ALERTING_FOR_NEWS):
+    @staticmethod
+    def site_news(bot_user, message):
+        command = message['text']
         site_news_name = command.split(ALERTING_FOR_NEWS).pop()
         news = models.SiteNews.objects.filter(name=site_news_name, bots=bot_user.bot)
         if news:
@@ -77,11 +71,12 @@ def get_command(bot_user, message):
         if news.users.filter(user=bot_user):
             bot_user.send_message('Вы уже подписаны на новости {}'.format(site_news_name))
         else:
-            news.users.create(user=bot_user) # add relation MtM
+            news.users.create(user=bot_user)  # add relation MtM
             bot_user.send_message('Подписаны на новости {}'.format(site_news_name))
-        return
 
-    if command.startswith(ALERTING_FOR_TV_SERIES):
+    @staticmethod
+    def tv_series(bot_user, message):
+        command = message['text']
         tv_series_id = command.split(ALERTING_FOR_TV_SERIES).pop()
         tv_series = models.TVSeries.objects.filter(id=tv_series_id)
         if tv_series:
@@ -97,31 +92,37 @@ def get_command(bot_user, message):
                 bot_user.send_message('Теперь вы подписаны на {}\n'.format(tv_series.name_rus))
         else:
             bot_user.send_message('Не найдено сериала')
-        return
 
-    if command.startswith(MY_SUBSCRIPTIONS):
-        sites_news = [site.site_news.name + '\n' + site.site_news.description for site in bot_user.sites_news.all()]
+    @staticmethod
+    def my_subscriptions(bot_user, message):
+        sites_news = [site.site_news.name + '\n' + site.site_news.description for site in
+                      bot_user.sites_news.all()]
         my_sites_news = ''
         if sites_news:
             my_sites_news = 'Мои новости :\n' + '\n'.join(sites_news) + '\n'
-        sites_tv_series = ['{}'.format(user_tv_series.tv_series) for user_tv_series in bot_user.tv_series.all()]
+        sites_tv_series = ['{}'.format(user_tv_series.tv_series) for user_tv_series in
+                           bot_user.tv_series.all()]
         my_tv_series = ''
         if sites_tv_series:
-            my_tv_series = 'Мои сериалы :\n' +'\n'.join(sites_tv_series)
+            my_tv_series = 'Мои сериалы :\n' + '\n'.join(sites_tv_series)
         if my_tv_series or my_sites_news:
             bot_user.send_message(my_sites_news + my_tv_series)
         else:
             bot_user.send_message('Вы ни на что не подписаны :(  Выберете {}'.format(GET_SITES))
-        return
 
-    if command == HELP:
+    @staticmethod
+    def help(bot_user, message):
         bot_user.send_message('''
-Бот позволяет получать информацию о новостях или сериях на которые вы подписаны.
-Для получения просмотра сайтов - выберете {start}
-Если хотите посмотреть на что вы уже подписаны - {subscribe}
-Исходники + просмотр списка ботов на
-https://github.com/Nick1994209/parsing_news_and_send_telegram
-            '''.format(start=GET_SITES, subscribe=MY_SUBSCRIPTIONS))
-        return
+        Бот позволяет получать информацию о новостях или сериях на которые вы подписаны.
+        Для получения просмотра сайтов - выберете {start}
+        Если хотите посмотреть на что вы уже подписаны - {subscribe}
+        Исходники + просмотр списка ботов на
+        https://github.com/Nick1994209/parsing_news_and_send_telegram'''.format(
+            start=GET_SITES, subscribe=MY_SUBSCRIPTIONS)
+        )
 
-    bot_user.send_message('Неизвестная команда :-) Выберете команду " {} " для помощи'.format(HELP))
+    @staticmethod
+    def incorrect_command(bot_user, message):
+        bot_user.send_message(
+            'Неизвестная команда :-) Выберете команду " {} " для помощи'.format(HELP)
+        )
