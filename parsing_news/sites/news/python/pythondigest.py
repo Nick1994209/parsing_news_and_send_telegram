@@ -1,7 +1,6 @@
 import datetime
 import re
-
-import requests
+from utils.http_client import simple_client
 from bs4 import BeautifulSoup
 
 
@@ -12,7 +11,7 @@ class Pythondigest:
     def get_all_news(cls, page=1):
         URL = cls.SITE_URL + '/feed/'
 
-        response = requests.get(URL + '?page/{}'.format(page))
+        response = simple_client.get(URL + '?page/{}'.format(page))
         content_bs = BeautifulSoup(response.content, 'html.parser')
 
         block_all_news_bs = content_bs.find('div', {'class': 'news-list'})

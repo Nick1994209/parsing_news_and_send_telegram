@@ -3,7 +3,7 @@ import os
 from django.utils import timezone
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE_LOG_DIR = BASE_DIR + '/logs/'
+BASE_LOG_DIR = os.path.join(BASE_DIR, '../logs/')
 if not os.path.exists(BASE_LOG_DIR):
     os.makedirs(BASE_LOG_DIR)
 

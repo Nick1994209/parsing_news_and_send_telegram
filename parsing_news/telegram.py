@@ -1,22 +1,19 @@
-import json
-
-import requests
+from utils.http_client import simple_client
 
 
 class Bot(object):
-
     def __init__(self, token):
         self.token = token
         self.url = 'https://api.telegram.org/bot' + token
 
     def get_me(self):
         url_get_me = self.url + '/getMe'
-        response = requests.get(url_get_me)
+        response = simple_client.get(url_get_me)
         return response.json()
 
     def get_updates(self):
         url_updates = self.url + '/getUpdates'
-        response = requests.get(url_updates)
+        response = simple_client.get(url_updates)
         return response.json()
 
     def get_new_messages(self, last_message_id=None):
@@ -36,4 +33,4 @@ class Bot(object):
     def send_message(self, chat_id, text):
         send_url = self.url + '/sendMessage'
         data = {'chat_id': chat_id, 'text': text}
-        requests.post(send_url, data=data)
+        simple_client.post(send_url, data=data)

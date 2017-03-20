@@ -60,12 +60,8 @@ class HH_python:
 
     @staticmethod
     def parse_description(raw_description):
-        print(raw_description)
         regular_search = r'<!\[CDATA\[\n(.*)\n\]\]>'  # instead \n need re.MULTILINE
         description_raw2 = re.findall(regular_search, raw_description).pop()
         description = description_raw2.replace('<p>', '\n')
         description = description.replace('</p>', '')
         return description
-
-
-print(HH_python.get_all_news())

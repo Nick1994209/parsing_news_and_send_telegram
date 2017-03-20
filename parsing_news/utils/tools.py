@@ -1,5 +1,4 @@
 def prepare_list_dict(list_data):
-    print(list_data)
     prepared_data = []
     for data in list_data:
         if isinstance(data, dict):
@@ -8,8 +7,6 @@ def prepare_list_dict(list_data):
             prepared_data.append(prepare_list_dict(data))
         else:
             prepared_data.append(data)
-
-    print(prepared_data)
     return prepared_data
 
 

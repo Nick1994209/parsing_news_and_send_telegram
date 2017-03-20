@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-from core.tools import prepare_list_dict
+from utils.tools import prepare_list_dict
 from sites import AllSitesCinema, AllSitesNews, rss_parser
 from telegram import Bot
 
@@ -144,7 +144,7 @@ class SiteCinema(Site):
                 if is_episodes_exists:
                     next_page = False
                 else:
-                    episode, episode_is_created = tv_series.series.create(**about_episode)
+                    episode = tv_series.series.create(**about_episode)
                     new_episodes.append(episode)
                     tv_series.date_release_last_ongoing_series = timezone.now()
                     tv_series.save()

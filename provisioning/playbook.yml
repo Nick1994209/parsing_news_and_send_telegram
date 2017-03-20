@@ -1,0 +1,47 @@
+---
+- hosts: all
+  user: vagrant
+  sudo: True
+
+  tasks:
+    - name: update apt packages
+      shell: yum updateinfo
+      become: True
+      tags: system
+
+    - name: Update yum
+      yum: name='*' state=present
+      become: True
+      tags: system
+
+#    - name: Install yum-utils
+#      yum: name=yum-utils
+#      become: True
+#      tags: system
+
+    - name: Install apt packages
+      yum: name='{{ item }}'
+      become: True
+      with_items:
+        - curl
+        - gcc.x86_64
+        - wget
+        - git
+        - libxml2-devel.x86_64
+        - libxslt-devel.x86_64
+        - python-devel.x86_64
+        - python35u-devel.x86_64
+        - python35u-pip.noarch
+        - libjpeg-turbo.x86_64
+        - libjpeg-turbo-devel.x86_64
+        - openssl-devel.i686
+        - cyrus-sasl-devel.x86_64
+        - openssl-devel.x86_64
+        - gcc-c++.x86_64
+        - policycoreutils-python
+        - libpng-devel.x86_64
+        - optipng.x86_64
+        - gdal
+        - gdal-python.x86_64
+        - vim
+      tags: system

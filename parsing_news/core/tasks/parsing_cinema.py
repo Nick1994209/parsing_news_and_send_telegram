@@ -11,7 +11,7 @@ def parsing_cinema(*args, **kwargs):
 
 
 def parsing_and_sending():
-    for site in models.SiteCinema.objects.filter(bots__users__isnull=False):
+    for site in models.SiteCinema.objects.filter(bots__users__isnull=False).distinct():
         new_episodes = []
         # try:
         new_episodes = site.get_new_episodes()
@@ -19,9 +19,8 @@ def parsing_and_sending():
         #     print('exception! cinema_sites: ' + str(e))
         #     create_log.create(str(e), 'parsing_cinema_sites.log')
 
-        print(new_episodes)
         for episode in new_episodes:
-            new_episodes(episode)
+            new_episode_send_message(episode)
 
 
 def new_episode_send_message(episode):
@@ -33,7 +32,7 @@ def new_episode_send_message(episode):
             site_name=episode.tv_series.site.name,
             tv_series_name=episode.tv_series.name_rus,
             number=episode.number, url=episode.url,
-            description=episode.series.description
+            description=episode.description
         )
         episode.tv_series.users_send_message(message)
 

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_q',
     'core',
+    'utils',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -79,12 +80,12 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, '..', 'db.sqlite3'),
     }
 }
 
 # Q_CLUSTER = {
-#     'name': 'parsing_news_and_send_in_telegram',
+#     'name': 'parsing_news',
 #     'workers': 4,
 #     'recycle': 500,
 #     'timeout': 60,
@@ -137,14 +138,4 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.9/howto/static-files/
-
 STATIC_URL = '/static/'
-
-# TELEGRAM_TOKEN = None # need set in local_settings
-
-# try:
-#     from project.local_settings import TELEGRAM_TOKEN
-# except ImportError:
-#     raise Exception('You must set token in local_settings')

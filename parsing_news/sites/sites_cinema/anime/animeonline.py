@@ -1,6 +1,6 @@
 import re
+from utils.http_client import simple_client
 
-import requests
 from bs4 import BeautifulSoup
 
 
@@ -13,7 +13,7 @@ class Animeonline:
         if page > 2:
             return []
 
-        response = requests.get(URL)
+        response = simple_client.get(URL)
 
         content_bs = BeautifulSoup(response.content, 'html.parser')
         anime_items_bs = content_bs.find_all('item')
@@ -88,7 +88,6 @@ class Animeonline:
     #     content = BeautifulSoup(response.content, 'html.parser')
     #     div_with_anime = content.find(id='dle-content')
     #     divs_anime = div_with_anime.find_all('div', {"class": "new_"})
-    #     print(len(divs_anime))
     #
     #     example = 'Проект-Б'
     #

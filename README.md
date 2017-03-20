@@ -3,15 +3,7 @@
 #### Сейчас доступен для сайтов:
     animeonline (animeonline_bot)
     pythondigest и simpleisbetterthancomplex (python_news_bot)
-    
-
-#### animeonline_bot
-Бот позволяет получать последние вышедшие сериалы, аниме
-
-#### python_news_bot
-Этот бот позволяет получать последние статьи с python/django 
-(есть возможность выбора источника подписки)
-
+    rss (любой, который добавите)
 
 ## Install
 

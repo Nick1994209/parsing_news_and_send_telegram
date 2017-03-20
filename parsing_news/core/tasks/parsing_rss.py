@@ -2,7 +2,7 @@ from core import create_log, models
 
 
 def parsing_rss(*args, **kwargs):
-    for rss in models.Rss.objects.filter(bots__users__isnull=False):
+    for rss in models.Rss.objects.filter(bots__users__isnull=False).distinct():
         try:
             new_rss_news = rss.get_news()
             message = """На rss канале "{channel}"

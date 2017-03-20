@@ -1,4 +1,4 @@
-import requests
+from utils.http_client import simple_client
 from bs4 import BeautifulSoup
 
 
@@ -12,7 +12,7 @@ class Simpleisbetterthancomplex:
         else:
             return []
 
-        response = requests.get(URL)
+        response = simple_client.get(URL)
         content_bs = BeautifulSoup(response.content, 'html.parser')
 
         all_news = content_bs.find_all('item')
