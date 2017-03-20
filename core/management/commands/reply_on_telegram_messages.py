@@ -11,9 +11,11 @@ class Command(BaseCommand):
         print('Telegram reply messages run')
 
         while True:
-            try:
-                tasks.reply_on_telegram_messages()
-            except Exception as e:
-                create_log.create('bot_error \t' + str(e), 'reply_on_telegram_messages.log')
+            tasks.reply_on_telegram_messages()
+
+            # try:
+            #     tasks.reply_on_telegram_messages()
+            # except Exception as e:
+            #     create_log.create('bot_error \t' + str(e), 'reply_on_telegram_messages.log')
 
             sleep(10)

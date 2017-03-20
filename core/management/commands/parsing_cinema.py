@@ -13,8 +13,9 @@ class Command(BaseCommand):
         print('Parsing cinema sites run')
 
         while True:
-            tasks.parsing_cinema_sites()
             self.delete_old_tvseries()
+
+            tasks.parsing_cinema()
             self.grab_sleep()
 
     def grab_sleep(self):
@@ -28,14 +29,6 @@ class Command(BaseCommand):
             sleep((8 - current_hour) * hour)
         else:
             sleep(1 * hour)
-
-    # def parsing(self):
-    #     for site in models.SiteCinema.objects.filter(bots__users__isnull=False):
-    #         try:
-    #             site.get_new_episodes()
-    #         except Exception as e:
-    #             print('exception! cinema_sites: ' + str(e))
-    #             create_log.create(str(e), 'parsing_cinema_sites.log')
 
     def delete_old_tvseries(self):
         now = timezone.now()

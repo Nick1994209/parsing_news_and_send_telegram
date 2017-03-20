@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -20,14 +21,17 @@ class Site(models.Model):
 
 class Rss(Site):
     def get_news(self):
-        parsed_news = rss_parser(self.url)
-
-        for news in parsed_news:
-            self.news.get_or_create(
-                title=news.get('title', '').strip(),
-                url=news.get('link', '').strip(),
-                description=self.get_description(news).strip()
+        parsed_channel = rss_parser(self.url)
+        new_rss_news = []
+        for parsed_news in parsed_channel:
+            rss_news, is_created = self.news.get_or_create(
+                title=parsed_news.get('title', '').strip(),
+                url=parsed_news.get('link', '').strip(),
+                description=self.get_description(parsed_news).strip()
             )
+            if is_created:
+                new_rss_news.append(rss_news)
+        return new_rss_news
 
     def users_send_message(self, message):
         for user in self.users.all():
@@ -45,8 +49,8 @@ class Rss(Site):
 class RssNews(models.Model):
     rss = models.ForeignKey(Rss, related_name='news')
     url = models.CharField(max_length=255, blank=True)
-    title = models.TextField(blank=True)
-    description = models.CharField(max_length=255, blank=True)
+    title = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
 
     def __str__(self):
         return self.title
@@ -118,6 +122,7 @@ class SiteCinema(Site):
     def get_new_episodes(self):
         page = 1
         max_count_page = 4
+        new_episodes = []
 
         while True:
             if page > max_count_page: break
@@ -132,32 +137,23 @@ class SiteCinema(Site):
             for series in page_series:
                 about_tv_series = series['tv_series']
                 about_episode = series['episode']
-                tv_series = self.tv_series.filter(**about_tv_series)
-                if tv_series:
-                    tv_series = tv_series.get()
-                else:
-                    tv_series = self.tv_series.create(**about_tv_series)
+                tv_series, _ = self.tv_series.get_or_create(**about_tv_series)
 
                 episode_number = about_episode.get('number', '1')
-                series = tv_series.series.filter(number__gte=episode_number)
-                if series:
+                is_episodes_exists = tv_series.series.filter(number__gte=episode_number).exists()
+                if is_episodes_exists:
                     next_page = False
                 else:
-                    series = tv_series.series.create(**about_episode)
-
+                    episode, episode_is_created = tv_series.series.create(**about_episode)
+                    new_episodes.append(episode)
                     tv_series.date_release_last_ongoing_series = timezone.now()
                     tv_series.save()
-
-                    message1 = 'На сайте "{}" \n'.format(tv_series.site.name)
-                    message2 = ' "{}" \n'.format(tv_series.name_rus)
-                    message3 = 'Вышла новая серия {} {} \n'.format(series.number, series.url)
-                    message4 = series.description
-                    tv_series.users_send_message(message1 + message2 + message3 + message4)
 
             if next_page:
                 page += 1
             else:
                 break
+        return new_episodes
 
 
 class TVSeries(models.Model):
@@ -195,8 +191,8 @@ class Series(models.Model):
 
 class TelegramBot(models.Model):
     token = models.CharField(max_length=255)
-    name = models.CharField(max_length=255, blank=True, help_text='Set from telegram.api get_me')
-    username = models.CharField(max_length=255, blank=True, help_text='Set from telegram.api get_me') # set in save
+    name = models.CharField(max_length=255, blank=True, help_text='From telegram.api get_me')
+    username = models.CharField(max_length=255, blank=True, help_text='From telegram.api get_me')
     last_message_id = models.IntegerField(default=0)
 
     sites_cinema = models.ManyToManyField(SiteCinema, related_name='bots', blank=True)
@@ -215,11 +211,13 @@ class TelegramBot(models.Model):
 
     def save(self, **kwargs):
         about_bot = self.get_bot().get_me()
-        if about_bot['ok']:
+        if about_bot.get('ok'):
             if not hasattr(self, 'username') or not self.username:
                 self.username = about_bot['result']['username']
             if not hasattr(self, 'name') or not self.name:
                 self.name = about_bot['result']['first_name']
+        else:
+            raise ValidationError('Бот не подтвержден или удален')
         if self.id:
             self.clear_users_relation_with_unsubscribing_sites()
 
@@ -231,11 +229,17 @@ class TelegramBot(models.Model):
 
         # sites_news
         subscribe_on_sites_news = [site.id for site in self.sites_news.all()]
-        UserNews.objects.filter(user__in=users_id).exclude(site_news__in=subscribe_on_sites_news).delete()
+        (UserNews.objects
+         .filter(user__in=users_id)
+         .exclude(site_news__in=subscribe_on_sites_news)
+         .delete())
 
         # sites_cinema
         subscribe_on_sites_cinema = [site.id for site in self.sites_cinema.all()]
-        UserSeries.objects.filter(user__in=users_id).exclude(tv_series__site__in=subscribe_on_sites_cinema).delete()
+        (UserSeries.objects
+         .filter(user__in=users_id)
+         .exclude(tv_series__site__in=subscribe_on_sites_cinema)
+         .delete())
 
     def __str__(self):
         return self.name
@@ -262,7 +266,11 @@ class TelegramUser(models.Model):
         bot.send_message(self.user_id, message)
 
     def __str__(self):
-        return '{user_id} {username} bot={bot}'.format(user_id=self.user_id, username=self.username, bot=self.bot.username)
+        return '{user_id} {username} bot={bot}'.format(
+            user_id=self.user_id,
+            username=self.username,
+            bot=self.bot.username
+        )
 
 
 class UserRss(models.Model):

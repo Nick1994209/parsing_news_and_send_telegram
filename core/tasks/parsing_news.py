@@ -1,7 +1,7 @@
 from core import create_log, models
 
 
-def parsing_news_sites(*args, **kwargs):
+def parsing_news(*args, **kwargs):
     for site in models.SiteNews.objects.filter(bots__users__isnull=False):
         try:
             site.get_news()
