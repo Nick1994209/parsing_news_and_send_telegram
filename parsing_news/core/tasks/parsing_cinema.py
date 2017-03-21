@@ -2,7 +2,8 @@ import datetime
 
 from django.utils import timezone
 
-from core import create_log, models
+from utils import create_log
+from core import models
 
 
 def parsing_cinema(*args, **kwargs):

@@ -3,7 +3,7 @@ from time import sleep
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from core import create_log, models, tasks
+from core import models, tasks
 
 
 class Command(BaseCommand):

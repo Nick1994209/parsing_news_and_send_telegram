@@ -1,4 +1,4 @@
-from core import create_log
+from utils import create_log
 from core import models
 from .commands import Commands
 

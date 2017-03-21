@@ -2,7 +2,8 @@ from time import sleep
 
 from django.core.management.base import BaseCommand
 
-from core import create_log, models, tasks
+from core import models, tasks
+from utils import create_log
 
 
 class Command(BaseCommand):

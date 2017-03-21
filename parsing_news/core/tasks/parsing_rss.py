@@ -1,4 +1,5 @@
-from core import create_log, models
+from utils import create_log
+from core import models
 
 
 def parsing_rss(*args, **kwargs):
