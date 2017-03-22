@@ -1,5 +1,7 @@
-from utils import create_log
+import logging
 from core import models
+
+logger = logging.getLogger('tasks')
 
 
 def parsing_rss(*args, **kwargs):
@@ -21,4 +23,4 @@ def parsing_rss(*args, **kwargs):
                 rss.users_send_message(rss_news_message)
         except Exception as e:
             print('exception! news_sites: ' + str(e))
-            create_log.create(str(e), 'parsing_news_sites.log')
+            logger.warning(str(e), 'parsing_news_sites.log')

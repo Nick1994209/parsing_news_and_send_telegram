@@ -1,9 +1,11 @@
 import datetime
 
+import logging
 from django.utils import timezone
 
-from utils import create_log
 from core import models
+
+logger = logging.getLogger('tasks')
 
 
 def parsing_cinema(*args, **kwargs):
@@ -18,7 +20,7 @@ def parsing_and_sending():
         new_episodes = site.get_new_episodes()
         # except Exception as e:
         #     print('exception! cinema_sites: ' + str(e))
-        #     create_log.create(str(e), 'parsing_cinema_sites.log')
+        #     logger.warning(str(e), 'parsing_cinema_sites.log')
 
         for episode in new_episodes:
             new_episode_send_message(episode)

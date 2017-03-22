@@ -2,7 +2,7 @@
 import logging
 import requests
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('HTTPClient')
 
 GOOD_STATUS = 200
 

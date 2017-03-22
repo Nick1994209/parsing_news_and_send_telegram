@@ -32,16 +32,21 @@
         - python-devel.x86_64
         - python35u-devel.x86_64
         - python35u-pip.noarch
-        - libjpeg-turbo.x86_64
-        - libjpeg-turbo-devel.x86_64
-        - openssl-devel.i686
-        - cyrus-sasl-devel.x86_64
-        - openssl-devel.x86_64
-        - gcc-c++.x86_64
-        - policycoreutils-python
-        - libpng-devel.x86_64
-        - optipng.x86_64
-        - gdal
-        - gdal-python.x86_64
         - vim
+      tags: system
+
+    - name: Make python default
+      raw: alias python=/usr/bin/python3.5
+      become: True
+      tags: system
+
+    - name: upgrade distribute
+      shell: pip3.5 install --upgrade distribute
+      tags: system
+
+    - name: Install pip packages
+      shell: pip3.5 install -r /home/vagrant/parsing_news_and_send_telegram/requirements.txt
+#      environment:
+#        PYTHONPATH: '/usr/local/bin/pip'
+#        PATH: "/usr/local/bin:{{ (ansible_env|default({})).PATH|default('') }}"
       tags: system

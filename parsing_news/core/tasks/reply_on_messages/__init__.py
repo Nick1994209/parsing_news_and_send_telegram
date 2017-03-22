@@ -1,6 +1,8 @@
-from utils import create_log
+import logging
 from core import models
 from .commands import Commands
+
+logger = logging.getLogger('tasks')
 
 
 def reply_on_telegram_messages():
@@ -17,7 +19,7 @@ def reply_on_telegram_messages():
             # try:
             #     Commands.get_command(bot_user, message)
             # except Exception as e:
-            #     create_log.create(
+            #     logger.warning(
             #         'command_error \t' + str(e), 'reply_on_telegram_messages.log'
             #     )
     return 1

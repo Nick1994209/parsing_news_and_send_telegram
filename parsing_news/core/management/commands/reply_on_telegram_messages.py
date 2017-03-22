@@ -1,9 +1,11 @@
 from time import sleep
 
+import logging
 from django.core.management.base import BaseCommand
 
 from core import models, tasks
-from utils import create_log
+
+logger = logging.getLogger('tasks')
 
 
 class Command(BaseCommand):
@@ -17,6 +19,6 @@ class Command(BaseCommand):
             # try:
             #     tasks.reply_on_telegram_messages()
             # except Exception as e:
-            #     create_log.create('bot_error \t' + str(e), 'reply_on_telegram_messages.log')
+            #     logger.warning('bot_error \t' + str(e), 'reply_on_telegram_messages.log')
 
             sleep(10)

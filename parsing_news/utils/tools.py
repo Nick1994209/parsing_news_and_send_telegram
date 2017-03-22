@@ -1,3 +1,7 @@
+import os
+import errno
+
+
 def prepare_list_dict(list_data):
     prepared_data = []
     for data in list_data:
@@ -15,3 +19,17 @@ def prepare_dict(data):
         if isinstance(value, str):
             data[key] = value.strip()
     return data
+
+
+def create_directory(_file):
+    path = os.path.dirname(_file)
+    if not path:
+        return
+
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise

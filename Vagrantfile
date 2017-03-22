@@ -4,9 +4,9 @@
 Vagrant.configure(2) do |config|
 
     config.vm.box = "centos/7"
-    config.vm.network "forwarded_port", guest: 80, host: 7171
-    config.vm.network :private_network, ip: '10.11.12.20'
-    config.vm.synced_folder ".", "/home/vagrant/python_projects", type: "rsync"
+    config.vm.network "forwarded_port", guest: 80, host: 7898
+    config.vm.network :private_network, ip: '10.10.10.10'
+    config.vm.synced_folder ".", "/home/vagrant/parsing_news_and_send_telegram", type: "rsync"
 
     # Configure the window for gatling to coalesce writes.
     if Vagrant.has_plugin?("vagrant-gatling-rsync")

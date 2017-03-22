@@ -12,15 +12,12 @@
 on server install virtualenvwrapper
 
 
-create env with name "django_telegram"
-
 install requirements.txt
 install features
 
     ./manage.py migrate
     ./manage.py loaddata core/fixtures/site_news.json core/fixtures/site_cinema.json
 
-in supervisor set my_qcluster.conf from .supervisor
     
 for run all need run script in scripts
 
