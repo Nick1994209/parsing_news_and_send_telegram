@@ -16,9 +16,4 @@ class Command(BaseCommand):
         while True:
             tasks.reply_on_telegram_messages()
 
-            # try:
-            #     tasks.reply_on_telegram_messages()
-            # except Exception as e:
-            #     logger.warning('bot_error \t' + str(e), 'reply_on_telegram_messages.log')
-
             sleep(10)

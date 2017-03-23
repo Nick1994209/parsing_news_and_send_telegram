@@ -4,7 +4,6 @@ from time import sleep
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from utils import create_log
 from core import models, tasks
 
 
@@ -34,5 +33,6 @@ class Command(BaseCommand):
     def delete_old_tvseries(self):
         now = timezone.now()
         month_ago = now - datetime.timedelta(days=30)
-        models.TVSeries.objects.filter(date_release_last_ongoing_series__lte=month_ago)\
-            .delete()
+        (models.TVSeries.objects
+         .filter(date_release_last_ongoing_series__lte=month_ago)
+         .delete())

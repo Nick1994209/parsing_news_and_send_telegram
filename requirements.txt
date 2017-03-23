@@ -4,3 +4,4 @@ bs4==0.0.1
 requests==2.11.1
 django-q==0.7.18
 feedparser
+celery

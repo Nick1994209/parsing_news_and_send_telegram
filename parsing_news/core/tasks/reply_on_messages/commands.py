@@ -11,7 +11,7 @@ MY_SUBSCRIPTIONS = '/mySubscriptions__'
 
 class Commands:
     @classmethod
-    def get_command(cls, bot_user, message):
+    def run_command(cls, bot_user, message):
 
         command = message['text'].lstrip('/').split('__')[0]  # example: /start__Vasya123 -> start
         handler = getattr(cls, command, None)

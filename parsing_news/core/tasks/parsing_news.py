@@ -9,5 +9,4 @@ def parsing_news(*args, **kwargs):
         try:
             site.get_news()
         except Exception as e:
-            print('exception! news_sites: ' + str(e))
-            logger.warning(str(e), 'parsing_news_sites.log')
+            logger.exception(e)

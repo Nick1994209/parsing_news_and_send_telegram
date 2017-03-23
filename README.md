@@ -1,6 +1,7 @@
 ## БОТ для телеграма
 
 #### Сейчас доступен для сайтов:
+
     animeonline (animeonline_bot)
     pythondigest и simpleisbetterthancomplex (python_news_bot)
     rss (любой, который добавите)

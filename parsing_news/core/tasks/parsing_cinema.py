@@ -16,11 +16,10 @@ def parsing_cinema(*args, **kwargs):
 def parsing_and_sending():
     for site in models.SiteCinema.objects.filter(bots__users__isnull=False).distinct():
         new_episodes = []
-        # try:
-        new_episodes = site.get_new_episodes()
-        # except Exception as e:
-        #     print('exception! cinema_sites: ' + str(e))
-        #     logger.warning(str(e), 'parsing_cinema_sites.log')
+        try:
+            new_episodes = site.get_new_episodes()
+        except Exception as e:
+            logger.exception(e)
 
         for episode in new_episodes:
             new_episode_send_message(episode)

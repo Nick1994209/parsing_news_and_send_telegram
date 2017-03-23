@@ -15,11 +15,7 @@ def reply_on_telegram_messages():
                 last_name=message['from'].get('last_name', ''),
             )
 
-            Commands.get_command(bot_user, message)
-            # try:
-            #     Commands.get_command(bot_user, message)
-            # except Exception as e:
-            #     logger.warning(
-            #         'command_error \t' + str(e), 'reply_on_telegram_messages.log'
-            #     )
-    return 1
+            try:
+                Commands.run_command(bot_user, message)
+            except Exception as e:
+                logger.exception(e)
