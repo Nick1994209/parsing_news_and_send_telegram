@@ -1,0 +1,6 @@
+cd ~/redis-stable;
+nohup redis-server &
+
+cd ~/parsing_news_and_send_telegram/parsing_news/;
+nohup ./manage.py runserver 0.0.0.0:8000 > ~/runserverlog &
+nohup celery -A parsing_news worker --loglevel=info  --beat &

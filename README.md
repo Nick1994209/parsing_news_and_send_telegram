@@ -12,7 +12,6 @@
 
 on server install virtualenvwrapper
 
-
 install requirements.txt
 install features
 
@@ -27,7 +26,11 @@ for run all need run script in scripts
     
     source run.sh & disown      (if need run )
 
-    
+run celery:
+
+    celery -A parsing_news worker --loglevel=info  --beat
+    # для schedule
+
 
 ############################################# 
     sudo apt-get install python-lxml  libxml2  libxml2-dev libxslt-dev
