@@ -14,7 +14,10 @@ def parsing_cinema(*args, **kwargs):
 
 
 def parsing_and_sending():
-    for site in models.SiteCinema.objects.filter(bots__users__isnull=False).distinct():
+    for site in (models.SiteCinema.objects
+                         .filter(bots__users__isnull=False)
+                         .distinct()
+                         .iterator()):
         new_episodes = []
         try:
             new_episodes = site.get_new_episodes()
@@ -42,5 +45,7 @@ def new_episode_send_message(episode):
 def delete_old_tv_series():
     now = timezone.now()
     month_ago = now - datetime.timedelta(days=30)
-    models.TVSeries.objects.filter(date_release_last_ongoing_series__lte=month_ago) \
-        .delete()
+
+    (models.TVSeries.objects
+     .filter(date_release_last_ongoing_series__lte=month_ago)
+     .delete())

@@ -80,12 +80,17 @@ STATIC_URL = '/static/'
 CELERY_BROKER = 'redis://localhost:6379'
 
 FILE_LOGGER = '/tmp/django_telegram/logs/debug.log'
-create_directory(FILE_LOGGER)
+FILE_HTTP_CLIENT_LOGGER = '/tmp/django_telegram/logs/http_client.log'
+create_directory(FILE_LOGGER); create_directory(FILE_HTTP_CLIENT_LOGGER)
 LOGGING = {
     'version': 1,
     'formatters': {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'verbose_with_extra': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d '
+                      '%(extra)s %(message)s'
         },
         'simple': {
             'format': '%(levelname)s %(message)s'
@@ -96,6 +101,12 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': FILE_LOGGER,
+            'formatter': 'verbose'
+        },
+        'file_http_client': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': FILE_HTTP_CLIENT_LOGGER,
             'formatter': 'verbose'
         },
         'console': {
@@ -110,7 +121,7 @@ LOGGING = {
             'propagate': True,
         },
         'HTTPClient': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file_http_client'],
             'level': 'DEBUG',
             'propagate': True,
         }

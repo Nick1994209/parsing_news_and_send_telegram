@@ -12,6 +12,8 @@ class Site(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.CharField(max_length=60, blank=True)
 
+    date_created = models.DateTimeField(auto_now_add=True, )
+
     class Meta:
         abstract = True
 
@@ -51,6 +53,7 @@ class RssNews(models.Model):
     url = models.CharField(max_length=255, blank=True)
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
+    date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
@@ -179,7 +182,7 @@ class Series(models.Model):
     number = models.FloatField(models.Model, default=1)
     description = models.TextField(blank=True)
     url = models.URLField(blank=True)
-    date_created = models.DateTimeField(default=timezone.now)
+    date_created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = 'tv_series', 'number'

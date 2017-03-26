@@ -3,13 +3,15 @@ from django.contrib import admin
 from . import models
 
 
-def inline(model, can_delete=False, show_change_link=True):
+def inline(model, can_delete=False, show_change_link=True, **params):
     class NewInline(admin.TabularInline):
         extra = 0
     NewInline.model = model
     NewInline.can_delete = can_delete
     NewInline.show_change_link = show_change_link
-    # NewInline.show_change_link = readonly_fields
+
+    for key, value in params.values():
+        setattr(NewInline, key, value)
     return NewInline
 
 
@@ -39,5 +41,8 @@ admin.site.register(models.Series)
 admin.site.register(models.TelegramBot, create_admin_class(
     inlines=[inline(models.TelegramUser, can_delete=True)]
 ))
-telegram_user_inlines = [inline(models.UserRss), inline(models.UserSeries), inline(models.UserNews)]
+telegram_user_inlines = [
+    inline(models.UserRss, can_delete=True),
+    inline(models.UserSeries, can_delete=True),
+    inline(models.UserNews, can_delete=True)]
 admin.site.register(models.TelegramUser, create_admin_class(telegram_user_inlines))

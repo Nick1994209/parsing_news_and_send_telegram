@@ -34,13 +34,15 @@ class Commands:
             message_serials = message_ser + '\n'.join(cinema_sites_names)
 
         message_news = ''
-        news_sites_names = [ALERTING_FOR_NEWS + site.name for site in bot_user.bot.sites_news.all()]
+        news_sites_names = [ALERTING_FOR_NEWS + site.name
+                            for site in bot_user.bot.sites_news.iterator()]
         if news_sites_names:
             message_n = '\n Вы можете выбрать один из сайтов с новостями: \n'
             message_news = message_n + '\n'.join(news_sites_names)
 
         rss = ''
-        rss_channels = [ALERTING_FOR_RSS + rss.name for rss in bot_user.bot.rss.all()]
+        rss_channels = [ALERTING_FOR_RSS + rss.name
+                        for rss in bot_user.bot.rss.iterator()]
         if rss_channels:
             message_rss = '\n Вы можете выбрать один из RSS каналов: \n'
             rss = message_rss + '\n'.join(rss_channels)
@@ -81,10 +83,12 @@ class Commands:
                 return
 
             if bot_user.tv_series.filter(tv_series=tv_series):
-                bot_user.send_message('Вы уже подписаны на {}\n'.format(tv_series.name_rus))
+                bot_user.send_message('Вы уже подписаны на {}\n'.format(
+                    tv_series.name_rus))
             else:
                 bot_user.tv_series.create(tv_series=tv_series)
-                bot_user.send_message('Теперь вы подписаны на {}\n'.format(tv_series.name_rus))
+                bot_user.send_message('Теперь вы подписаны на {}\n'.format(
+                    tv_series.name_rus))
         else:
             bot_user.send_message('Не найдено сериала')
 
@@ -108,7 +112,8 @@ class Commands:
     def siteRSS(bot_user, message):
         command = message['text']
         rss_name = command.split(ALERTING_FOR_RSS).pop()
-        rss = models.Rss.objects.filter(name=rss_name, bots=bot_user.bot).first()  # name unique
+        rss = models.Rss.objects.filter(name=rss_name, bots=bot_user.bot).first()
+        # name unique
         _, is_created = bot_user.rss.get_or_create(rss=rss)
         if is_created:
             bot_user.send_message('Подписаны на rss канал {}'.format(rss.url))
@@ -130,7 +135,8 @@ class Commands:
         if my_tv_series or my_sites_news:
             bot_user.send_message(my_sites_news + my_tv_series)
         else:
-            bot_user.send_message('Вы ни на что не подписаны :(  Выберете {}'.format(GET_SITES))
+            bot_user.send_message('Вы ни на что не подписаны :(  Выберете {}'.format(
+                GET_SITES))
 
     @staticmethod
     def help(bot_user, message):
