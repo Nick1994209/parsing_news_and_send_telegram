@@ -19,3 +19,4 @@ def reply_on_telegram_messages():
                 Commands.run_command(bot_user, message)
             except Exception as e:
                 logger.exception(e)
+                logger.warning(str(e))

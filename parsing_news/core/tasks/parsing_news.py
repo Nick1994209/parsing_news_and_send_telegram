@@ -18,6 +18,7 @@ def parsing_news(*args, **kwargs):
             site.get_news()
         except Exception as e:
             logger.exception(e)
+            logger.warning(str(e))
 
     # deleting old
     now = datetime.now()

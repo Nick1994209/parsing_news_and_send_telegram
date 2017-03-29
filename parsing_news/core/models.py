@@ -1,10 +1,13 @@
+import logging
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
 from utils.tools import prepare_list_dict
 from sites import AllSitesCinema, AllSitesNews, rss_parser
-from telegram import Bot
+from telegram import Bot as TelegramBotApi
+
+logger = logging.getLogger(__name__)
 
 
 class Site(models.Model):
@@ -49,7 +52,7 @@ class Rss(Site):
 
 
 class RssNews(models.Model):
-    rss = models.ForeignKey(Rss, related_name='news')
+    rss = models.ForeignKey(Rss, related_name='news', on_delete=models.CASCADE)
     url = models.CharField(max_length=255, blank=True)
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
@@ -93,7 +96,7 @@ class SiteNews(Site):
 
 
 class News(models.Model):
-    site = models.ForeignKey(SiteNews, related_name='news')
+    site = models.ForeignKey(SiteNews, related_name='news', on_delete=models.CASCADE)
 
     url = models.URLField(blank=True)
     tags = models.TextField(blank=True)
@@ -160,7 +163,7 @@ class SiteCinema(Site):
 
 
 class TVSeries(models.Model):
-    site = models.ForeignKey(SiteCinema, related_name='tv_series')
+    site = models.ForeignKey(SiteCinema, related_name='tv_series', on_delete=models.CASCADE)
     name_rus = models.CharField(max_length=255, blank=True)
     name_eng = models.CharField(max_length=255, blank=True)
 
@@ -178,7 +181,7 @@ class TVSeries(models.Model):
 
 
 class Series(models.Model):
-    tv_series = models.ForeignKey(TVSeries, related_name='series')
+    tv_series = models.ForeignKey(TVSeries, related_name='series', on_delete=models.CASCADE)
     number = models.FloatField(models.Model, default=1)
     description = models.TextField(blank=True)
     url = models.URLField(blank=True)
@@ -197,13 +200,14 @@ class TelegramBot(models.Model):
     name = models.CharField(max_length=255, blank=True, help_text='From telegram.api get_me')
     username = models.CharField(max_length=255, blank=True, help_text='From telegram.api get_me')
     last_message_id = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
 
     sites_cinema = models.ManyToManyField(SiteCinema, related_name='bots', blank=True)
     sites_news = models.ManyToManyField(SiteNews, related_name='bots', blank=True)
     rss = models.ManyToManyField(Rss, related_name='bots', blank=True)
 
     def get_bot(self):
-        return Bot(self.token)
+        return TelegramBotApi(self.token)
 
     def get_last_messages(self):
         messages = self.get_bot().get_new_messages(self.last_message_id)
@@ -220,10 +224,10 @@ class TelegramBot(models.Model):
             if not hasattr(self, 'name') or not self.name:
                 self.name = about_bot['result']['first_name']
         else:
+            self.is_active = False
             raise ValidationError('Бот не подтвержден или удален')
         if self.id:
             self.clear_users_relation_with_unsubscribing_sites()
-
         return super().save(**kwargs)
 
     def clear_users_relation_with_unsubscribing_sites(self):
@@ -231,14 +235,16 @@ class TelegramBot(models.Model):
         users_id = [user.id for user in self.users.all()]
 
         # sites_news
-        subscribe_on_sites_news = [site.id for site in self.sites_news.all()]
+        subscribe_on_sites_news = self.sites_news.values_list('id', flat=True)
+        # [site.id for site in self.sites_news.all()]
         (UserNews.objects
          .filter(user__in=users_id)
          .exclude(site_news__in=subscribe_on_sites_news)
          .delete())
 
         # sites_cinema
-        subscribe_on_sites_cinema = [site.id for site in self.sites_cinema.all()]
+        # subscribe_on_sites_cinema = [site.id for site in self.sites_cinema.all()]
+        subscribe_on_sites_cinema = self.sites_cinema.values_list('id', flat=True)
         (UserSeries.objects
          .filter(user__in=users_id)
          .exclude(tv_series__site__in=subscribe_on_sites_cinema)
@@ -250,8 +256,8 @@ class TelegramBot(models.Model):
     def users_send_message(self, message):
         bot = self.get_bot()
 
-        for user in self.users.all():
-            bot.send_message(user.user_id, message)
+        for user_id in self.users.values_list('user_id', flat=True):
+            bot.send_message(user_id, message)
 
 
 class TelegramUser(models.Model):
@@ -259,14 +265,27 @@ class TelegramUser(models.Model):
     username = models.CharField(max_length=255, blank=True)
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
-    bot = models.ForeignKey(TelegramBot, related_name='users')
+    is_active = models.BooleanField(default=True)
+    bot = models.ForeignKey(TelegramBot, related_name='users', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = 'user_id', 'bot'
 
     def send_message(self, message):
         bot = self.bot.get_bot()
-        bot.send_message(self.user_id, message)
+        response = bot.send_message(self.user_id, message)
+
+        return response
+
+    def check_response(self, response):
+        if response.status_code == 403:
+            logger.info('TelegramUser {} unsubscribe from TelegramBot {}'.format(
+                self.username, self.bot.username))
+            self.is_active = False
+            self.save()
+        elif response.status_code == 200 and self.is_active == False:
+            self.is_active = True
+            self.save()
 
     def __str__(self):
         return '{user_id} {username} bot={bot}'.format(
@@ -277,8 +296,8 @@ class TelegramUser(models.Model):
 
 
 class UserRss(models.Model):
-    user = models.ForeignKey(TelegramUser, related_name='rss')
-    rss = models.ForeignKey(Rss, related_name='users')
+    user = models.ForeignKey(TelegramUser, related_name='rss', on_delete=models.CASCADE)
+    rss = models.ForeignKey(Rss, related_name='users', on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
@@ -290,8 +309,8 @@ class UserRss(models.Model):
 
 
 class UserSeries(models.Model):
-    user = models.ForeignKey(TelegramUser, related_name='tv_series')
-    tv_series = models.ForeignKey(TVSeries, related_name='users')
+    user = models.ForeignKey(TelegramUser, related_name='tv_series', on_delete=models.CASCADE)
+    tv_series = models.ForeignKey(TVSeries, related_name='users', on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
@@ -306,8 +325,8 @@ class UserSeries(models.Model):
 
 
 class UserNews(models.Model):
-    user = models.ForeignKey(TelegramUser, related_name='sites_news')
-    site_news = models.ForeignKey(SiteNews, related_name='users')
+    user = models.ForeignKey(TelegramUser, related_name='sites_news', on_delete=models.CASCADE)
+    site_news = models.ForeignKey(SiteNews, related_name='users', on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):

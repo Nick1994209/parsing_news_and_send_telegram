@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import requests
 
@@ -52,11 +53,11 @@ class HTTPClient(object):
         except ValueError as ex:
             self.log.error(
                 'Error while reading response',
-                extra={'data': {
+                extra=json.dumps({'data': {
                     'response.text': response.text if response else None,
                     'url': response.url if response else url,
-                    'exception': ex,
-                }}
+                    'exception': str(ex),
+                }})
             )
             return None
         if (self.good_http_codes is not None and
@@ -68,7 +69,7 @@ class HTTPClient(object):
             extra.update(request_parameters)
             self.log.critical(
                 'Wrong HTTP status code %s', response.status_code,
-                extra=extra
+                extra=json.dumps(extra)
             )
         return response
 

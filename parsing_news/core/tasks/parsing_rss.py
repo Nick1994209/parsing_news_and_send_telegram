@@ -27,6 +27,7 @@ def parsing_rss(*args, **kwargs):
                 rss.users_send_message(rss_news_message)
         except Exception as e:
             logger.exception(e)
+            logger.warning(str(e))
 
     # deleting old
     now = datetime.now()

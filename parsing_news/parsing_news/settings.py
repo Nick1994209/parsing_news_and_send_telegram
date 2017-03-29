@@ -107,7 +107,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': FILE_HTTP_CLIENT_LOGGER,
-            'formatter': 'verbose'
+            'formatter': 'verbose_with_extra'
         },
         'console': {
             'class': 'logging.StreamHandler',

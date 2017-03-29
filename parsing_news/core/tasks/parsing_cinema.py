@@ -23,6 +23,7 @@ def parsing_and_sending():
             new_episodes = site.get_new_episodes()
         except Exception as e:
             logger.exception(e)
+            logger.warning(str(e))
 
         for episode in new_episodes:
             new_episode_send_message(episode)

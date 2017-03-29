@@ -33,4 +33,4 @@ class Bot(object):
     def send_message(self, chat_id, text):
         send_url = self.url + '/sendMessage'
         data = {'chat_id': chat_id, 'text': text}
-        simple_client.post(send_url, data=data)
+        return simple_client.post(send_url, data=data)
