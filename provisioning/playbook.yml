@@ -3,50 +3,115 @@
   user: vagrant
   sudo: True
 
+  vars:
+    USER_HOME: "~"
+    PROJECT_HOME: "~/parsing_news_and_send_telegram"
+    SUPERVISOR_FILE: "/etc/supervisor.conf"
+
   tasks:
     - name: update apt packages
       shell: yum updateinfo
       become: True
       tags: system
 
-    - name: Update yum
-      yum: name='*' state=present
+    - name: Update all packages
+      yum: name='*' state=latest
       become: True
       tags: system
-
-#    - name: Install yum-utils
-#      yum: name=yum-utils
-#      become: True
-#      tags: system
 
     - name: Install apt packages
       yum: name='{{ item }}'
       become: True
       with_items:
+        - yum-utils
         - curl
         - gcc.x86_64
         - wget
         - git
         - libxml2-devel.x86_64
         - libxslt-devel.x86_64
-        - python-devel.x86_64
-        - python35u-devel.x86_64
-        - python35u-pip.noarch
         - vim
       tags: system
 
-    - name: Make python default
-      raw: alias python=/usr/bin/python3.5
-      become: True
+    - name: Install python3.5
+      command: "yum -y {{ item }}"
+      with_items:
+        - groupinstall development
+        - install https://centos7.iuscommunity.org/ius-release.rpm
+        - install python35u-3.5.2
+        - install python35u-pip
+        - install python35u-devel
+        - install python-setuptools
+      sudo: True
       tags: system
 
-    - name: upgrade distribute
-      shell: pip3.5 install --upgrade distribute
+    - name: install virtualenv
+      shell: pip3.5 install vurtualenv
+      command: "{{ item }}"
+      with_items:
+        - mkdir {{ USER_HOME }}/virtualenv
+        - install https://centos7.iuscommunity.org/ius-release.rpm
+        - install python35u-3.5.2
+        - install python35u-pip
+        - install python35u-devel
+        - install python-setuptools
+      sudo: True
       tags: system
+
+    - name: add virtualenv django_telegram
+      shell: virtualenv -p python3.5 django_telegram
+    # TODO добавить путь
+      tags: system, backend
 
     - name: Install pip packages
-      shell: pip3.5 install -r /home/vagrant/parsing_news_and_send_telegram/requirements.txt
+      shell: pip3.5 install -r {{ PROJECT_HOME }}/requirements.txt
 #      environment:
 #        PYTHONPATH: '/usr/local/bin/pip'
 #        PATH: "/usr/local/bin:{{ (ansible_env|default({})).PATH|default('') }}"
       tags: system
+
+    - name: install supervisor
+      command: "{{ item }}"
+      with_items:
+        - yum install -y python-setuptools
+        - easy_install supervisor
+      sudo: True
+      tags: system
+
+    - name: add supervisor scripts
+      command: "{{ item }}"
+      with_items:
+        - echo_supervisord_conf > {{ SUPERVISOR_FILE }}
+        - cp {{ PROJECT_HOME }}/etc/supervisor/* >> {{ SUPERVISOR_FILE }}
+        - sudo supervisord -c {{ SUPERVISOR_FILE }}
+        - sudo supervisorctl -c {{ SUPERVISOR_FILE }}
+      sudo: True
+      tags:
+        - system
+        - restart
+        - supervisor
+#
+#    - name: add supervisor scripts
+#      shell: "cp {{ PROJECT_HOME }}/etc/supervisor/* /etc/supervisor/conf.d/"
+#      command: "supervisorctl {{ item }}"
+#      with_items:
+#        - mkdir -p /etc/supervisor/conf.d/
+#        - echo_supervisord_conf > /etc/supervisord.conf  #  надо вроде как
+#        - cp {{ PROJECT_HOME }}/etc/supervisor/* /etc/supervisor/conf.d/
+#      sudo: True
+#      tags:
+#        - system
+#        - restart
+#        - supervisor
+
+    - name: restart supervisor
+      command: "supervisorctl {{ item }}"
+      with_items:
+        - reread
+        - update
+        - restart all
+      sudo: True
+      tags:
+        - system
+        - restart
+        - supervisor

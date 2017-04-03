@@ -114,6 +114,10 @@ class Commands:
         rss_name = command.split(ALERTING_FOR_RSS).pop()
         rss = models.Rss.objects.filter(name=rss_name, bots=bot_user.bot).first()
         # name unique
+        if not rss:
+            bot_user.send_message('Бот не подписан на канал {}'.format(rss_name))
+            return
+
         _, is_created = bot_user.rss.get_or_create(rss=rss)
         if is_created:
             bot_user.send_message('Подписаны на rss канал {}'.format(rss.url))

@@ -9,6 +9,7 @@ DAYS_FOR_DELETE_OLD_NEWS = 30 * 4  # 4 months
 
 def parsing_rss(*args, **kwargs):
     # parsing new
+    logger.info('PARSING RSS')
     for rss in models.Rss.objects.filter(bots__users__isnull=False).distinct().iterator():
         try:
             new_rss_news = rss.get_news()

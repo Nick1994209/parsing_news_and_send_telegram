@@ -10,6 +10,7 @@ DAYS_FOR_DELETE_OLD_NEWS = 30 * 4  # 4 months
 
 def parsing_news(*args, **kwargs):
     # parsing
+    logger.info('PARSING NEWS')
     for site in (models.SiteNews.objects
                          .filter(bots__users__isnull=False)
                          .distinct()

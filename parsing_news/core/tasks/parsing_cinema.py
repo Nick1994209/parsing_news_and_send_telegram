@@ -9,8 +9,13 @@ logger = logging.getLogger('tasks')
 
 
 def parsing_cinema(*args, **kwargs):
-    parsing_and_sending()
-    delete_old_tv_series()
+    logger.info('PARSING CINEMA')
+    try:
+        parsing_and_sending()
+        delete_old_tv_series()
+    except Exception as e:
+        logger.warning('parsing_cinema')
+        logger.exception(e)
 
 
 def parsing_and_sending():

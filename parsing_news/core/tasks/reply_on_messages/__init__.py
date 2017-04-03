@@ -6,6 +6,8 @@ logger = logging.getLogger('tasks')
 
 
 def reply_on_telegram_messages():
+    logger.info('REPLY ON TELEGRAM MESSAGES')
+
     for bot in models.TelegramBot.objects.all():
         for message in bot.get_last_messages():
             bot_user, _ = bot.users.get_or_create(
