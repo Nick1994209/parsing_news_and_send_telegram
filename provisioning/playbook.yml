@@ -23,6 +23,11 @@
       become: True
       tags: system
 
+    - name: Add nginx repo
+      shell: rm -f /etc/yum.repos.d/nginx.repo && ln -s {{ PROJECT_HOME }}/etc/nginx/nginx.repo /etc/yum.repos.d/nginx.repo
+      become: True
+      tags: system
+
     - name: Install apt packages
       yum: name='{{ item }}'
       become: True
@@ -35,39 +40,34 @@
         - libxml2-devel.x86_64
         - libxslt-devel.x86_64
         - vim
-        - nginx
         - epel-release
+        - nginx
         - yum-utils
         - php-curl
       ignore_errors: True
       tags: system
 
     - name: mkdir for nginx
-      shell: mkdir -p /var/log/nginx/ && mkdir -p /etc/nginx/
-      become: True
-      tags:
-        - system
-
-    - name: Add nginx repo
-      shell: rm -f {{ SUPERVISOR_FILE }} && cp {{ PROJECT_HOME }}/etc/nginx/vagraant.nginx.conf /etc/nginx/
+      shell: mkdir -p /var/log/nginx/ && mkdir -p /etc/nginx/nginx.conf
       become: True
       tags: system
 
-    - name: restart nginx
-      shell: '{{ item }}'
-      with_elements:
-        - nginx
-        - nginx reload
-        - nginx quit
-        - nginx
+    - name: Add nginx repo
+      shell: rm -f {{ SUPERVISOR_FILE }} && cp {{ PROJECT_HOME }}/etc/nginx/vagraant.nginx.conf /etc/nginx/nginx.conf
       become: True
-      tags:
-        - system
-        - nginx
+      tags: system
+
+#    - name: Restart nginx
+#      shell: nginx reload
+#      become: True
+#      tags:
+#        - system
+#        - nginx
 
     - name: install the CentOS Development Tools
       # which are used to allow you to build and compile software
-      command: yum -y groupinstall development;
+      command: yum -y groupinstall development
+      become: True
       tags: system
 
     - name: Install python3.6
@@ -95,6 +95,15 @@
         - system
         - backend
         - restart
+
+    - name: migrate DB
+      pip: virtualenv="{{ PARSING_NEWS_VIRTUALENV }}"
+           virtualenv_python=python3.6
+           requirements={{ PROJECT_HOME }}/requirements.txt
+      tags:
+        - system
+        - backend
+        - database
 
     - name: install supervisor
       command: "{{ item }}"
