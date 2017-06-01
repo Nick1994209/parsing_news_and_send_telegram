@@ -4,12 +4,16 @@
   sudo: True
 
   vars:
-    USER_HOME: "~"
-    PROJECT_HOME: "~/parsing_news_and_send_telegram"
+    USER_HOME: "/home/vagrant"
+    PROJECT_NAME: "parsing_news_and_send_telegram"
+    PROJECT_HOME: "{{ USER_HOME }}/{{ PROJECT_NAME }}"
     SUPERVISOR_FILE: "/etc/supervisor.conf"
+    VIRTUALENV_DIR: "{{ USER_HOME }}/virtualenv"
+    VIRTUALENV_NAME: "parsing_news_and_send_telegram"
+    PARSING_NEWS_VIRTUALENV: "{{ VIRTUALENV_DIR }}/{{ VIRTUALENV_NAME }}"
 
   tasks:
-    - name: update apt packages
+    - name: yum updateinfo
       shell: yum updateinfo
       become: True
       tags: system
@@ -31,52 +35,77 @@
         - libxml2-devel.x86_64
         - libxslt-devel.x86_64
         - vim
+        - nginx
+        - epel-release
+        - yum-utils
+        - php-curl
+      ignore_errors: True
       tags: system
 
-    - name: Install python3.5
-      command: "yum -y {{ item }}"
+    - name: mkdir for nginx
+      shell: mkdir -p /var/log/nginx/ && mkdir -p /etc/nginx/
+      become: True
+      tags:
+        - system
+
+    - name: Add nginx repo
+      shell: rm -f {{ SUPERVISOR_FILE }} && cp {{ PROJECT_HOME }}/etc/nginx/vagraant.nginx.conf /etc/nginx/
+      become: True
+      tags: system
+
+    - name: restart nginx
+      shell: '{{ item }}'
+      with_elements:
+        - nginx
+        - nginx reload
+        - nginx quit
+        - nginx
+      become: True
+      tags:
+        - system
+        - nginx
+
+    - name: install the CentOS Development Tools
+      # which are used to allow you to build and compile software
+      command: yum -y groupinstall development;
+      tags: system
+
+    - name: Install python3.6
+      command: "yum -y install {{ item }}"
       with_items:
-        - groupinstall development
-        - install https://centos7.iuscommunity.org/ius-release.rpm
-        - install python35u-3.5.2
-        - install python35u-pip
-        - install python35u-devel
-        - install python-setuptools
+        - https://centos7.iuscommunity.org/ius-release.rpm
+        - python36u
+        - python36u-pip
+        - python36u-devel
       sudo: True
       tags: system
 
-    - name: install virtualenv
-      shell: pip3.5 install vurtualenv
+    - name: Install virtualenv
       command: "{{ item }}"
       with_items:
-        - mkdir {{ USER_HOME }}/virtualenv
-        - install https://centos7.iuscommunity.org/ius-release.rpm
-        - install python35u-3.5.2
-        - install python35u-pip
-        - install python35u-devel
-        - install python-setuptools
-      sudo: True
+        - pip3.5 install virtualenv
+        - mkdir -p {{ VIRTUALENV_DIR }}
       tags: system
 
-    - name: add virtualenv django_telegram
-      shell: virtualenv -p python3.5 django_telegram
-    # TODO добавить путь
-      tags: system, backend
-
-    - name: Install pip packages
-      shell: pip3.5 install -r {{ PROJECT_HOME }}/requirements.txt
-#      environment:
-#        PYTHONPATH: '/usr/local/bin/pip'
-#        PATH: "/usr/local/bin:{{ (ansible_env|default({})).PATH|default('') }}"
-      tags: system
+    - name: Initiate virtualenv
+      pip: virtualenv="{{ PARSING_NEWS_VIRTUALENV }}"
+           virtualenv_python=python3.6
+           requirements={{ PROJECT_HOME }}/requirements.txt
+      tags:
+        - system
+        - backend
+        - restart
 
     - name: install supervisor
       command: "{{ item }}"
       with_items:
         - yum install -y python-setuptools
         - easy_install supervisor
-      sudo: True
-      tags: system
+        - mkdir /tmp/logs/
+      become: True
+      tags:
+        - system
+        - backend
 
     - name: add supervisor scripts
       command: "{{ item }}"
@@ -85,24 +114,11 @@
         - cp {{ PROJECT_HOME }}/etc/supervisor/* >> {{ SUPERVISOR_FILE }}
         - sudo supervisord -c {{ SUPERVISOR_FILE }}
         - sudo supervisorctl -c {{ SUPERVISOR_FILE }}
-      sudo: True
+      become: True
       tags:
         - system
         - restart
-        - supervisor
-#
-#    - name: add supervisor scripts
-#      shell: "cp {{ PROJECT_HOME }}/etc/supervisor/* /etc/supervisor/conf.d/"
-#      command: "supervisorctl {{ item }}"
-#      with_items:
-#        - mkdir -p /etc/supervisor/conf.d/
-#        - echo_supervisord_conf > /etc/supervisord.conf  #  надо вроде как
-#        - cp {{ PROJECT_HOME }}/etc/supervisor/* /etc/supervisor/conf.d/
-#      sudo: True
-#      tags:
-#        - system
-#        - restart
-#        - supervisor
+        - backend
 
     - name: restart supervisor
       command: "supervisorctl {{ item }}"
@@ -114,4 +130,4 @@
       tags:
         - system
         - restart
-        - supervisor
+        - backend
