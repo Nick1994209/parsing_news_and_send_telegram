@@ -28,8 +28,9 @@ for run all need run script in scripts
 
 run celery:
 
-    celery -A parsing_news worker --loglevel=info  --beat
-    # для schedule
+    celery -A parsing_news worker --loglevel=info --beat -Q high,normal,low
+    celery -A parsing_news beat --loglevel=info
+    flower -A parsing_news --port=5555
 
 
 ############################################# 

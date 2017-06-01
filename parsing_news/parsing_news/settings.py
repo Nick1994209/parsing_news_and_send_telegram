@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'core',
     'utils',
     'django_extensions',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -82,6 +83,8 @@ CELERY_BROKER = 'redis://localhost:6379'
 FILE_LOGGER = '/tmp/django_telegram/logs/debug.log'
 FILE_HTTP_CLIENT_LOGGER = '/tmp/django_telegram/logs/http_client.log'
 create_directory(FILE_LOGGER); create_directory(FILE_HTTP_CLIENT_LOGGER)
+
+# CELERYD_HIJACK_ROOT_LOGGER = False  # TODO True
 LOGGING = {
     'version': 1,
     'formatters': {
@@ -113,6 +116,10 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        # 'celery_sentry_handler': {
+        #     'level': 'ERROR',
+        #     'class': 'core.log.handlers.CelerySentryHandler'
+        # }
     },
     'loggers': {
         'tasks': {
@@ -124,6 +131,11 @@ LOGGING = {
             'handlers': ['console', 'file_http_client'],
             'level': 'DEBUG',
             'propagate': True,
-        }
+        },
+        # 'celery': {
+        #     'handlers': ['celery_sentry_handler'],
+        #     'level': 'ERROR',
+        #     'propagate': False,
+        # },
     }
 }
