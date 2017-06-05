@@ -6,3 +6,4 @@ logs
 .vagrant
 celerybeat-schedule.db
 .DS_Store
+secret_variables.ini

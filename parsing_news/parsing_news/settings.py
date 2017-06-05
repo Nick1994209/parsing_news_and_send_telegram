@@ -1,5 +1,7 @@
 import os
 
+import raven
+
 from utils.tools import create_directory
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,6 +23,7 @@ INSTALLED_APPS = [
     'utils',
     'django_extensions',
     'django_celery_beat',
+    'raven.contrib.django.raven_compat',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -116,10 +119,11 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
-        # 'celery_sentry_handler': {
-        #     'level': 'ERROR',
-        #     'class': 'core.log.handlers.CelerySentryHandler'
-        # }
+        'sentry': {
+            'level': 'ERROR',  # To capture more than ERROR, change to WARNING, INFO, etc.
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'tags': {'custom-tag': 'x'},
+        },
     },
     'loggers': {
         'tasks': {
@@ -132,10 +136,24 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        # 'celery': {
-        #     'handlers': ['celery_sentry_handler'],
-        #     'level': 'ERROR',
-        #     'propagate': False,
-        # },
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'sentry.errors': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['sentry'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
     }
+}
+
+RAVEN_CONFIG = {
+    'dsn': '',  # TODO put in secret file
 }

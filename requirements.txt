@@ -26,3 +26,4 @@ celery==4.0.2
 django-celery-beat==1.0.1
 flower==0.9.1
 tornado==4.2.0  # for flower
+raven==6.1.0
