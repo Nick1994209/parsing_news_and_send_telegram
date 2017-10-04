@@ -64,7 +64,7 @@ WSGI_APPLICATION = 'parsing_news.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, '..', 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -147,7 +147,7 @@ LOGGING = {
             'propagate': False,
         },
         'celery': {
-            'handlers': ['sentry'],
+            'handlers': ['sentry', 'file'],
             'level': 'ERROR',
             'propagate': False,
         },
@@ -155,5 +155,6 @@ LOGGING = {
 }
 
 RAVEN_CONFIG = {
-    'dsn': '',  # TODO put in secret file
+    # set token for project from https://sentry.io/you_name/project/settings/ (Security token)
+    'dsn': '',
 }
