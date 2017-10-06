@@ -6,29 +6,28 @@ services:
 
   web:
     build: .
-    command: python /code/manage.py runserver 0.0.0.0:8080
+    command: python ./manage.py runserver 0.0.0.0:8080
+#    command: /code/run_server_and_ngrok.sh
     volumes:
       - ./parsing_news:/code
     ports:
       - "8080:8080"
+#      - "8088:4040"  # ngrok
 
-  ngrok:
-    build: .
-#    command: python
-    command: python /code/manage.py ngrok --ngrok_command='/ngrok/ngrok' --share_port='8080'
-    volumes:
-      - ./parsing_news:/code
-    depends_on:
-      - web
-    links:
-      - web:127.0.0.1  # нужно как то опрокинуть web:8080 в localhost:8080
-#    ports:
-#      - "8088:4040"
+#  ngrok:
+#    build: .
+##    command: python
+#    command: python /code/manage.py ngrok --ngrok_command='/ngrok/ngrok' --share_port='8080'
+#    volumes:
+#      - ./parsing_news:/code
+#    depends_on:
+#      - web
+#    links:
+#      - web:127.0.0.1  # нужно как то опрокинуть web:8080 в localhost:8080
+##    ports:
+##      - "8088:4040"
 
   celery:
-#    build:
-#      dockerfile: Dockerfile
-#      context: .
     build: .
     command: celery -A parsing_news worker --loglevel=info
     volumes:

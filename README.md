@@ -2,11 +2,19 @@
 
 #### Can use for sites
 
-    animeonline (animeonline_bot)
-    pythondigest и simpleisbetterthancomplex (python_news_bot)
-    rss (any)
+- animeonline (animeonline_bot)
+- pythondigest и simpleisbetterthancomplex (python_news_bot)
+- rss (adding rss in admin /admin/core/rss/)
 
-    adding rss in admin
+#### How it work
+
+- In /admin/core/telegrambot/ add telegrambot token (https://core.telegram.org/bots#6-botfather)
+
+   and subscribe to sites or rss
+
+- you can subscribe to bot in telegram and choice sites or rss
+
+---
 
 ## Work with docker
 
